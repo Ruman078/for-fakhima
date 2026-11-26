@@ -1,0 +1,38 @@
+export const config = {
+  recipient: 'Fakhima',
+  sender: 'Ruman',
+  birthday: 'November 30',
+  greeting: 'HELLOS',
+  birthdayGreeting: 'HAPPY BIRTHDAY,',
+  finalGreeting: 'HAPPY BIRTHDAYYYY',
+  closing: 'I hope you liked your flowers :3',
+  aside: 'I made you something.',
+  birthdayAside: 'An entire garden for you cuz why not.',
+  bouquetMessage: 'Ye wale kabhi murjhayenge bhi nahi btw.',
+  flowers: ['daisy', 'white-lily', 'pink-lily', 'lavender', 'breath'],
+  palette: { ink: '#0b1e21', ivory: '#f6eed8', gold: '#d9bd80', sky: '#163b3c', paper: '#eddfbe' },
+  quality: { particles: 32, lowParticles: 13, maxDpr: 1.6, slowFrame: 29 },
+  timing: { firstBloom: 8700, gardenBloom: 7400, wake: 740 },
+  chapters: ['The sleeping garden', 'The first daisy', 'Lilies in bloom', 'The birthday garden', 'Your bouquet', 'A little letter', 'Small surprises', 'With love'],
+  letter: [
+    'Hellos Fakhima :3',
+    'Happy birthdayyyy. I genuinely hope this year is really good to you and you get that one thing you’re thinking of right now. Haan, that one.',
+    'Apke sath time spend karna mujhe bohat acha lagta hai. We can be sitting around at uni doing absolutely nothing and somehow I’ll still go home with a new inside joke.',
+    'I love the little details you put in your letters and the things you make. You get excited about an idea and suddenly I’m excited to see how it turns out too. Please keep doing that.',
+    'I hope there’s lots of time this year for the things you like. And fresh gajre. And days when you just get to be happy for no particular reason.',
+    'Khair, I love you. Happy birthday once again, jee.',
+    'With love, Ruman'
+  ],
+  surprises: [
+    'Another lily? Jee bilkul, aap ke liye.',
+    'One daisy, and now look what you’ve started :3',
+    'May your next letter turn out exactly like you pictured it.',
+    'Apki hansi is genuinely one of my favourite sounds.',
+    'I owe you a Roblox session. You pick the game.',
+    'I hope you get all the gajre you want this year.',
+    'More long breaks at uni with absolutely nothing to do, please.',
+    'I really really like seeing you happy.',
+    'I hope you find churriya that match your favourite outfit EXACTLY.',
+    'Happy birthday for the 728th time.'
+  ]
+};

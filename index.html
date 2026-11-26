@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1e21">
+  <meta name="description" content="A little birthday garden for Fakhima, grown one flower at a time.">
+  <title>For Fakhima · A birthday garden</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles/main.css">
+  <link rel="stylesheet" href="./styles/botany.css">
+  <link rel="stylesheet" href="./styles/bouquet.css">
+  <link rel="stylesheet" href="./styles/keepsakes.css">
+</head>
+<body>
+  <div id="book" class="book" data-stage="0">
+    <header class="masthead">
+      <div class="dedication"><span class="emblem" aria-hidden="true"></span><span>For <i>Fakhima</i></span></div>
+      <div class="tools"><button id="sound" class="tool-button" aria-pressed="false" aria-label="Turn sound on"><span class="sound-icon"></span><span class="tool-text">Sound off</span></button>
+        <button id="chapters" class="tool-button chapters-button" aria-haspopup="dialog"><span class="map-icon"></span><span class="tool-text">Chapters</span></button>
+      </div>
+    </header>
+    <main id="plate" class="plate" aria-label="Birthday garden">
+      <div class="scenery" aria-hidden="true">
+        <div class="sky"></div><div class="dawn"></div>
+        <div id="stars"></div><div id="hills"></div>
+        <canvas id="motes"></canvas>
+        <div id="garden"></div>
+        <div class="garden-shade"></div>
+      </div>
+      <div class="etched-frame" aria-hidden="true"></div>
+      <div id="scene" class="scene"></div>
+      <div class="page-numeral" aria-hidden="true"><span></span><i id="folio">I</i><span></span></div>
+    </main>
+    <footer class="colophon">
+      <div class="chapter-caption"><span id="chapter-number">01 / 08</span><span class="rule"></span><span id="chapter-title">The sleeping garden</span></div>
+      <div class="page-buttons"><button id="prev" aria-label="Previous chapter"></button><div id="progress" aria-hidden="true"></div><button id="next" aria-label="Next chapter"></button></div>
+    </footer>
+  </div>
+  <div id="chapter-layer" class="chapter-layer" hidden>
+    <section id="chapter-dialog" role="dialog" aria-modal="true" aria-labelledby="chapter-heading" tabindex="-1">
+      <div class="contents-top"><h2 id="chapter-heading">Chapters</h2><button id="close-chapters" class="icon-button" aria-label="Close chapters"></button></div>
+      <nav id="contents" aria-label="Garden chapters"></nav>
+    </section>
+  </div>
+  <div class="sr-only" aria-live="polite" id="announce"></div>
+  <noscript>Hellos Fakhima :3 Happy birthdayyyy! Turn on JavaScript to grow your garden. With love, Ruman.</noscript>
+  <script type="module" src="./scripts/app.js"></script>
+</body>
+</html>

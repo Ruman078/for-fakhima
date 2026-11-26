@@ -1,0 +1,147 @@
+.g-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+.g-bank {
+  position: absolute;
+  bottom: -1.5%;
+  width: min(56%, 66vh, 750px);
+  width: min(56%, 76dvh, 750px);
+  aspect-ratio: 480 / 568;
+  transform-origin: bottom left;
+  transition: opacity 1.2s, translate 1.5s cubic-bezier(.22,.67,.27,1);
+}
+.g-left { left: -1.5%; }
+.g-right { right: -1.5%; transform: scaleX(-1); transform-origin: center bottom; }
+.g-print, .g-growing { display: block; width: 100%; height: 100%; }
+.g-print {transform-origin:12% 100%;animation:g-grasses 11s ease-in-out infinite alternate;}
+.g-right .g-print {animation-duration:12.7s;animation-delay:-5s;}
+@keyframes g-grasses {from{transform:rotate(-.14deg);}to{transform:rotate(.16deg);}}
+.g-growing { position: absolute; inset: 0; }
+.g-canopy {
+  position: absolute;
+  top: -5px;
+  width: clamp(100px,17%,280px);
+  opacity: .7;
+}
+.g-canopy-left { left: -5px; }
+.g-canopy-right { right: -5px; transform: scaleX(-1); width: clamp(110px,19%,305px); }
+
+.g-hero {
+  position: absolute;
+  bottom: -1%;
+  left: 50%;
+  transform: translateX(-50%);
+  transform-origin:center bottom;
+  transition:transform 2.6s cubic-bezier(.34,.04,.19,.98);
+  width: auto;
+  height: min(49%, 370px);
+  overflow: visible;
+  display: none;
+}
+[data-botany="1"] .g-hero { display: block; }
+:is([data-botany="2"],[data-botany="3"]) .g-hero {display:block;transform:translate(calc(-50% - 26vw), 2%) scale(.72) rotate(-8deg);}
+.g-growing { display: none; }
+:is([data-botany="2"],[data-botany="3"],[data-botany="7"]) .g-growing { display: block; }
+
+[data-botany="1"] .g-hero .b-stem, [data-botany="2"] .g-growing .b-stem {
+  stroke-dasharray: 1;
+  animation: b-stem 1.75s cubic-bezier(.37,.06,.34,.95) both;
+  animation-delay: var(--plant-delay,0ms);
+}
+[data-botany="1"] .g-hero .b-leaf, [data-botany="2"] .g-growing .b-leaf {
+  transform-origin: 0 0;
+  animation: b-leaf 1.32s cubic-bezier(.23,.56,.29,1) both;
+  animation-delay: calc(550ms + var(--unfold,0ms) + var(--plant-delay,0ms));
+}
+[data-botany="1"] .g-hero .b-petal, [data-botany="2"] .g-growing .b-petal {
+  transform-origin: 0 0;
+  animation: b-petal 1.9s cubic-bezier(.25,.04,.18,1) both;
+  animation-delay: calc(2280ms + var(--unfold,0ms) + var(--plant-delay,0ms));
+}
+[data-botany="1"] .g-hero .b-disc, [data-botany="2"] .g-growing .b-disc {
+  animation: b-disc 1.1s ease-out both;
+  animation-delay: calc(2380ms + var(--unfold,0ms) + var(--plant-delay,0ms));
+}
+.b-bud { opacity: 0; }
+[data-botany="1"] .g-hero .b-bud, [data-botany="2"] .g-growing .b-bud {
+  transform-origin: 0 0;
+  animation: b-bud 2.35s ease both;
+  animation-delay: calc(1390ms + var(--plant-delay,0ms));
+}
+[data-botany="1"] .g-hero { animation: g-breeze 8.2s 4.4s ease-in-out infinite alternate; }
+@keyframes b-stem { from {stroke-dashoffset:1;} to {stroke-dashoffset:0;} }
+@keyframes b-leaf { from {transform:scale(.13,.27) rotate(17deg);opacity:0;} 17% {opacity:1;} to {transform:scale(1) rotate(0);} }
+@keyframes b-petal {
+  0% {transform:scale(.12,.07) skewX(-22deg); opacity:0;}
+  12% {opacity:1;}
+  63% {transform:scale(.67,.86) skewX(-5deg);}
+  100% {transform:scale(1) skewX(0);}
+}
+@keyframes b-disc { from {opacity:0;transform:scale(.35);} to {opacity:1;transform:scale(1);} }
+@keyframes b-bud { 0% {opacity:0;transform:scale(.22);} 22% {opacity:1;} 49% {opacity:1;transform:scale(1);} 100% {opacity:0;transform:scale(.48,.67);} }
+@keyframes g-breeze { from {transform:translateX(-50%) rotate(-.8deg);} to {transform:translateX(-50%) rotate(.75deg);} }
+
+.g-flight, .g-lady { position: absolute; display: none; }
+.g-flight { left:19%; top:56%; width:clamp(21px,3.3%,43px); height:auto; }
+.g-second { left:auto; right:15%; top:43%; width:clamp(18px,2.6%,36px); }
+.g-flight svg, .g-lady svg { display:block; width:100%;overflow:visible; }
+:is([data-botany="2"],[data-botany="3"],[data-botany="7"]) :is(.g-flight,.g-lady) { display:block; }
+.g-lady { left:19%;bottom:17%;width:clamp(10px,3.4%,17px);transform:rotate(43deg); }
+.g-flight { animation: g-flight 15s cubic-bezier(.39,.02,.39,.99) infinite alternate; }
+.g-second { animation: g-second 17.6s cubic-bezier(.39,.02,.39,.99) infinite alternate; }
+.g-lady { animation: g-beetle 18s ease-in-out infinite alternate; }
+.b-wing { transform-origin:0 0; animation:g-wing .31s ease-in-out infinite alternate; }
+.wing-b { animation-delay:-.043s; animation-duration:.35s; }
+@keyframes g-flight {
+  0%,13% {transform:translate(-13px,19px) rotate(-16deg);}
+  39% {transform:translate(31px,-26px) rotate(18deg);}
+  55% {transform:translate(51px,-11px) rotate(8deg);}
+  80%,100% {transform:translate(77px,6px) rotate(-27deg);}
+}
+@keyframes g-second { 0%,17% {transform:translate(31px,7px) rotate(14deg);} 48% {transform:translate(3px,-18px) rotate(-19deg);} 78%,100% {transform:translate(-35px,16px) rotate(20deg);} }
+@keyframes g-wing { from {transform:scaleX(.32) skewY(-7deg);} to {transform:scaleX(1);} }
+@keyframes g-beetle { 0%,17% {transform:translate(0,0) rotate(39deg);} 52% {transform:translate(5px,-7px) rotate(62deg);} 78%,100% {transform:translate(9px,-11px) rotate(41deg);} }
+
+.g-wreath {
+  display:none;
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+}
+[data-botany="7"] .g-wreath {display:block; animation:g-crown 2.1s cubic-bezier(.23,.55,.23,1) both;}
+@keyframes g-crown { from {opacity:0;transform:translate(-50%,-47%) scale(.94) rotate(-2deg);} to {opacity:1;transform:translate(-50%,-50%) scale(1);} }
+:is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-bank {opacity:.45; translate:0 6%;}
+:is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-print {animation-play-state:paused;}
+:is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-canopy { opacity:.42; }
+[data-botany="7"] .g-bank {opacity:.74;}
+@media(max-width:650px) {
+  .g-bank { width: max(104%,295px); max-width:468px; bottom:-1%; }
+  .g-left { left:-13%; }
+  .g-right { right:-10%; }
+  .g-canopy {width:30%;max-width:143px;}
+  .g-canopy-right {width:33%;}
+  .g-hero {height:52%;max-height:345px;}
+  .g-flight {left:7%;}
+  .g-second {right:10%;top:57%;}
+  :is([data-botany="2"],[data-botany="3"]) .g-hero {transform:translate(calc(-50% - 29vw),4%) scale(.63) rotate(-9deg);}
+  [data-botany="7"] .g-bank {width:88%;bottom:-2%;}
+}
+@media(max-width:650px) and (max-height:740px) {
+  .g-bank {width:max(93%,245px);bottom:-2.3%;}
+  .g-left {left:-11%;}
+  .g-right {right:-8%;}
+  .g-hero {height:50%;}
+}
+@media(max-height:500px) and (orientation:landscape) {
+  .g-bank {width:38%;max-width:305px;bottom:-8%;}
+  .g-canopy {width:15%;max-width:120px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .g-art *, .g-art *::before {animation:none !important;transition:none !important;}
+  .b-bud { opacity:0!important; }
+}
+.hidden-tab .g-art * {animation-play-state:paused!important;}
