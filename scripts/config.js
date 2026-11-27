@@ -9,7 +9,7 @@ export const config = {
   aside: 'I made you something.',
   birthdayAside: 'An entire garden for you cuz why not.',
   bouquetMessage: 'Ye wale kabhi murjhayenge bhi nahi btw.',
-  flowers: ['daisy', 'white-lily', 'pink-lily', 'lavender', 'breath'],
+  flowers: ['daisy', 'white-lily', 'pink-lily', 'rose', 'peony', 'tulip', 'poppy', 'cosmos', 'cornflower', 'sweet-pea', 'lavender', 'breath'],
   palette: { ink: '#0b1e21', ivory: '#f6eed8', gold: '#d9bd80', sky: '#163b3c', paper: '#eddfbe' },
   quality: { particles: 32, lowParticles: 13, maxDpr: 1.6, slowFrame: 29 },
   timing: { firstBloom: 8700, gardenBloom: 7400, wake: 740 },
@@ -17,8 +17,8 @@ export const config = {
   letter: [
     'Hellos Fakhima :3',
     'Happy birthdayyyy. I genuinely hope this year is really good to you and you get that one thing you’re thinking of right now. Haan, that one.',
-    'Apke sath time spend karna mujhe bohat acha lagta hai. We can be sitting around at uni doing absolutely nothing and somehow I’ll still go home with a new inside joke.',
-    'I love the little details you put in your letters and the things you make. You get excited about an idea and suddenly I’m excited to see how it turns out too. Please keep doing that.',
+    'Aaj cake apki pasand ka ho, aur jis slice pe sab se achi decoration ho woh bhi apka. Birthday rules jee :3',
+    'I hope at least one present makes you go “wait, apko yaad tha?” And I hope someone takes a picture right then, cuz that one belongs in your birthday book.',
     'I hope there’s lots of time this year for the things you like. And fresh gajre. And days when you just get to be happy for no particular reason.',
     'Khair, I love you. Happy birthday once again, jee.',
     'With love, Ruman'
@@ -33,6 +33,10 @@ export const config = {
     'More long breaks at uni with absolutely nothing to do, please.',
     'I really really like seeing you happy.',
     'I hope you find churriya that match your favourite outfit EXACTLY.',
-    'Happy birthday for the 728th time.'
+    'Happy birthday for the 728th time.',
+    'Oh hellos. Your birthday guests are getting tinier :3',
+    'Iske spots gin ke dekho. Ek spot, ek extra birthday wish.',
+    'Caught this one guarding the strawberries. Aap guest list pe ho, jee.',
+    'The first ripe strawberry is yours. Baaki kal dekhte hain :3'
   ]
 };

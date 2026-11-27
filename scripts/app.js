@@ -13,14 +13,24 @@ const name=escapeText(config.recipient),sender=escapeText(config.sender);
 Object.entries(config.palette).forEach(([key,value])=>book.style.setProperty('--'+key,value));
 $('.dedication i').textContent=config.recipient;
 $('.emblem').innerHTML=emblem();$('.sound-icon').innerHTML=icons.silent;$('.map-icon').innerHTML=icons.chapters;
-$('#sound').hidden=!(window.AudioContext || window.webkitAudioContext);
 $('.etched-frame').innerHTML=Array.from({length:4},()=>`<span>${corner()}</span>`).join('');
 $('#prev').innerHTML=icons.left;$('#next').innerHTML=icons.right;$('#close-chapters').innerHTML=icons.close;
 $('#contents').innerHTML=config.chapters.map((title,i)=>`<button data-page="${i}"><span>${roman[i]}</span>${escapeText(title)}${icons.right}</button>`).join('');
 $('#progress').innerHTML=roman.map(()=>'<i></i>').join('');
-const environment=landscape(plate,config.quality),garden=mountGarden($('#garden')),sound=gardenSound();
+function showSound(state) {
+  const enabled=state==='on';
+  const status={on:'Sound on',off:'Sound off',starting:'Starting sound',paused:'Resume sound',retry:'Try sound again'};
+  const button=$('#sound');
+  button.setAttribute('aria-pressed',String(enabled));
+  button.setAttribute('aria-label',enabled?'Turn sound off':state==='off'?'Turn sound on':status[state]);
+  button.querySelector('.tool-text').textContent=status[state];
+  button.querySelector('.sound-icon').innerHTML=enabled?icons.sound:icons.silent;
+}
+const environment=landscape(plate,config.quality),garden=mountGarden($('#garden')),sound=gardenSound(showSound);
+$('#sound').hidden=!sound.available;
 let current=-1,schedule,cleanup,serial=0,awakening=false,locked=false;
 let bouquetModule;
+const foundNotes = new Set();
 const button=(label,action,icon=icons.right)=>`<button class="garden-button" data-action="${action}">${label}${icon}</button>`;
 const date=`<div class="date-line"><span></span>${escapeText(config.birthday)}<span></span></div>`;
 function content(page) {
@@ -54,6 +64,9 @@ function syncNav(){
 }
 async function go(page,focus=true){
   if(page<0 || page>7 || page===current) return;
+  if(current>=0 && !(awakening && page===1)) {
+    sound.play(page===7?'finale':page===3?'birthday':page===2?'bloom':'chapter');
+  }
   const token=++serial;
   schedule?.cancel();cleanup?.();cleanup=null;schedule=timeline();
   if(!map.hidden)closeMap(false);
@@ -67,7 +80,7 @@ async function go(page,focus=true){
     if(token!==serial)return;
     const mount=page===4?feature.mountBouquet:page===5?feature.mountLetter:feature.mountDiscoveries;
     if(page===4)bouquetModule=feature;
-    cleanup=mount(scene,{config,onNext:()=>{if(page===current)go(page+1);}});
+    cleanup=mount(scene,{config,foundNotes,onSound:sound.play,onNext:()=>{if(page===current)go(page+1);}});
   }
   if(focus){
     const anchor=scene.querySelector('h1,h2')||scene;
@@ -76,6 +89,7 @@ async function go(page,focus=true){
   if(page===1 || page===2) {
     const delay=reducedMotion.matches?(page===1?1800:2100):(page===1?config.timing.firstBloom:config.timing.gardenBloom);
     schedule.after(delay,()=>{if(map.hidden)go(page+1);else pendingAdvance=page;});
+    if(page===1 && !reducedMotion.matches) schedule.after(5100,()=>{if(map.hidden)sound.play('bloom');});
   }
 }
 function wake(event){
@@ -86,9 +100,9 @@ function wake(event){
   const ripple=document.createElement('span');ripple.className='light-ripple';
   ripple.style.left=(x-rect.left)+'px';ripple.style.top=(y-rect.top)+'px';
   plate.append(ripple);setTimeout(()=>ripple.remove(),1650);
-  book.classList.add('awakening');sound.bloom();schedule.after(reducedMotion.matches?80:config.timing.wake,()=>go(1));
+  book.classList.add('awakening');sound.play('wake');schedule.after(reducedMotion.matches?80:config.timing.wake,()=>go(1));
 }
-async function replay(){bouquetModule?.resetBouquet?.();await go(0);}
+async function replay(){bouquetModule?.resetBouquet?.();foundNotes.clear();await go(0);}
 scene.addEventListener('click',event=>{
   const action=event.target.closest('[data-action]')?.dataset.action;
   if(!action)return;
@@ -102,21 +116,19 @@ scene.addEventListener('click',event=>{
 // A double tap on a page arrow should turn only one page.
 function turn(delta){
   if(locked)return;locked=true;setTimeout(()=>{locked=false;},360);
-  sound.turn();go(current+delta);
+  go(current+delta);
 }
 $('#prev').addEventListener('click',()=>turn(-1));$('#next').addEventListener('click',()=>turn(1));
-$('#sound').addEventListener('click',async()=>{
-  const enabled=await sound.toggle();
-  $('#sound').setAttribute('aria-pressed',String(enabled));$('#sound').setAttribute('aria-label','Turn sound '+(enabled?'off':'on'));
-  $('#sound .tool-text').textContent='Sound '+(enabled?'on':'off');$('.sound-icon').innerHTML=enabled?icons.sound:icons.silent;
-});
+$('#sound').addEventListener('click',sound.toggle);
 let pendingAdvance=null;
 function openMap(){
+  sound.play('menuOpen');
   map.hidden=false;
   $('#contents [aria-current]')?.focus();
   book.inert=true;book.setAttribute('aria-hidden','true');environment.pause(true);
 }
 function closeMap(focus=true){
+  if(focus)sound.play('menuClose');
   map.hidden=true;book.inert=false;book.removeAttribute('aria-hidden');environment.pause(false);
   if(focus)$('#chapters').focus({preventScroll:true});
   const page=pendingAdvance;pendingAdvance=null;

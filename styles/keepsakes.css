@@ -228,15 +228,24 @@
   .ks-action:hover .ks-arrow { transform: translateX(3px); }
   .ks-letter[data-open="false"] .ks-envelope-button:hover .ks-wax { filter: brightness(1.07); }
 }
-.ks-discover { width:min(100%,840px); }
-.ks-bed {
-  width: min(100%, 704px);
-  height: clamp(195px,34vh,316px);
-  height: clamp(195px,34svh,316px);
-  margin: clamp(7px,2vh,18px) auto 7px;
-  position:relative;
+.ks-discover {
+  width:100%; height:100%; min-height:530px; padding:clamp(13px,3.2vh,40px) 0 0;
+  justify-content:flex-start;
 }
-.ks-bed svg { display:block; overflow:visible; }
+.ks-discover .ks-heading { padding-inline:16px; flex:none; }
+.ks-bed {
+  width:100%; min-height:309px; flex:1 0 0; margin:0;
+  position:relative; overflow:hidden;
+}
+.ks-bed>svg { position:absolute; inset:0; display:block; overflow:hidden; }
+.ks-side-fruit { cursor:pointer; touch-action:manipulation; }
+.ks-garden-foot { width:100%; padding:0 12px 9px; background:linear-gradient(#19342c,#142c27); }
+.ks-beetle-breeze { transform-box:fill-box; transform-origin:center; }
+.ks-object[data-key="bug"] .ks-beetle-breeze { animation:ks-creep 9s -2s ease-in-out infinite alternate; }
+.ks-object[data-key="bug-berry"] .ks-beetle-breeze { animation:ks-creep 11s -7s ease-in-out infinite alternate-reverse; }
+.ks-object[data-key="bug-path"] .ks-beetle-breeze { animation:ks-creep 14s -3s ease-in-out infinite alternate; }
+.ks-object[data-key="bug-clover"] .ks-beetle-breeze { animation:ks-creep 12s -5s ease-in-out infinite alternate-reverse; }
+@keyframes ks-creep { 0%,26% { transform:translate(-1px,.5px) rotate(-9deg); } 57%,100% { transform:translate(3px,-1.8px) rotate(7deg); } }
 .ks-object { cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color: transparent; outline:none; }
 .ks-icon, .ks-flight, .ks-bug-travel, .ks-garland, .ks-lid, .ks-live-flower, .ks-open-lily, .ks-closed-bud {
   transform-box:fill-box; transform-origin:center;
@@ -298,6 +307,8 @@
   .ks-letter[data-open="true"] .ks-mailstage { margin-top:9px; }
   .ks-paper { inset-inline:0; }
   .ks-discovery-actions .ks-action { font-size:15px; }
+  .ks-discover { padding-inline:0; min-height:505px; }
+  .ks-garden-foot .ks-noteslot { min-height:59px; }
 }
 @media (max-height:600px) and (orientation:landscape) {
   .ks-scene { padding-top:2px; padding-bottom:4px; }
@@ -305,8 +316,10 @@
   .ks-mailstage { height:148px; margin-block:4px; }
   .ks-letter[data-open="true"] .ks-mailstage { height:168px; }
   .ks-envelope-button { width:190px; }
-  .ks-bed { height:160px; margin-block:4px; }
+  .ks-discover { min-height:430px; padding:10px 0 0; }
+  .ks-bed { min-height:300px; }
   .ks-noteslot { min-height:43px; }
+  .ks-garden-foot { padding-bottom:3px; }
 }
 @media (prefers-reduced-motion:reduce) {
   .ks-scene *, .ks-scene *::before, .ks-scene *::after { transition-duration:.01ms !important; animation-duration:.01ms !important; animation-delay:0ms !important; animation-iteration-count:1 !important; }

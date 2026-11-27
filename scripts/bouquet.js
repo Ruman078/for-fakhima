@@ -1,23 +1,15 @@
 import { botanicalDefs, sprig } from './botany.js';
 import { flowerArc } from './motion.js';
+import { cutFlowers, floristDefs, flowerId, useArt } from './florist-art.js';
+import { wrapChoices, defaultWrap, makeWrap, swatch } from './bouquet-wrap.js';
 
-const FLOWERS = [
-  { type: 'daisy', name: 'Daisy' },
-  { type: 'white-lily', name: 'Ivory lily' },
-  { type: 'pink-lily', name: 'Pink lily' },
-  { type: 'lavender', name: 'Lavender' },
-  { type: 'breath', name: "Baby’s breath" }
-];
-const LIMIT = 11;
+const LIMIT = 42;
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const bouquet = { stems: [], nextId: 1, arrangement: 0, wrapped: false };
+const bouquet = { stems: [], nextId: 1, arrangement: 0, wrapped: false, wrap: defaultWrap() };
 let mounts = 0;
 
 export function resetBouquet() {
-  bouquet.stems = [];
-  bouquet.nextId = 1;
-  bouquet.arrangement = 0;
-  bouquet.wrapped = false;
+  Object.assign(bouquet, {stems:[], nextId:1, arrangement:0, wrapped:false, wrap:defaultWrap()});
 }
 
 const escape = value => String(value).replace(/[&<>"']/g, c => ({
@@ -29,7 +21,6 @@ const icons = {
   arrange: '<path d="M3 7h3c5 0 7 10 12 10h3m-4-4 4 4-4 4M3 17h3c1.5 0 3.1-1.5 4.4-3.6M13.5 9.5C15 7.7 16.4 7 18 7h3m-4-4 4 4-4 4"/>',
   arrow: '<path d="M3 12h17m-6-6 6 6-6 6"/>',
   save: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/>',
-  plus: '<path d="M12 5v14M5 12h14"/>'
 };
 const icon = key => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" aria-hidden="true">${icons[key]}</svg>`;
 
@@ -42,11 +33,8 @@ function paper(prefix) {
   const corner = '<path d="M0 23V0h23M2.8 13V2.8h10.2M0 6.5c6.5 0 6.5-3.3 8.9-3.3-1 1.9-1.8 5.5-5.8 5.9C4 6.9 6.6 4.3 8.9 3.2"/>';
   return `<defs>
     <linearGradient id="${prefix}-paper" x2="1" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#f4ebd2"/><stop offset=".54" stop-color="#e5d8b6"/><stop offset="1" stop-color="#f0e6cc"/></linearGradient>
-    <linearGradient id="${prefix}-wrap-a" x1="0" y1="0" x2="1" y2=".25"><stop stop-color="#b48f65"/><stop offset=".5" stop-color="#e1c69b"/><stop offset="1" stop-color="#c5a47a"/></linearGradient>
-    <linearGradient id="${prefix}-wrap-b" x1="0" y1="0" x2="1" y2=".32"><stop stop-color="#efdcba"/><stop offset=".55" stop-color="#d9bb91"/><stop offset="1" stop-color="#b58e66"/></linearGradient>
     <pattern id="${prefix}-grain" width="42" height="42" patternUnits="userSpaceOnUse"><g fill="none" stroke="#6c6444" stroke-width=".63" opacity=".19">${grain}</g></pattern>
-    <pattern id="${prefix}-wrap-lines" width="3.8" height="3.8" patternUnits="userSpaceOnUse" patternTransform="rotate(18)"><path d="M0 0v4" stroke="#73603d" stroke-width=".45" opacity=".34"/></pattern>
-    <clipPath id="${prefix}-tucked"><path d="M0 0H320V189H214L179 293 159 301 104 191H0Z"/></clipPath>
+    <clipPath id="${prefix}-tucked"><path d="M0 0H320V175H232L186 299 157 313 89 179H0Z"/></clipPath>
   </defs><rect width="320" height="350" fill="url(#${prefix}-paper)"/><rect width="320" height="350" fill="url(#${prefix}-grain)"/>
   <g fill="none" stroke="#8b8265" stroke-width=".65" opacity=".6"><path d="M24 11h272M24 339h272M11 24v302m298-302v302" opacity=".5"/>${[[11,11,0],[309,11,90],[309,339,180],[11,339,270]].map(([x,y,r])=>`<g transform="translate(${x} ${y}) rotate(${r})">${corner}</g>`).join('')}</g>`;
 }
@@ -67,61 +55,94 @@ function emptyStudy(prefix) {
     </g></g>`;
 }
 
-function wrapArt(prefix, name) {
-  return `<g class="bq-wrap">
-    <g class="bq-wrap-left"><path d="m104 192 61 30 45-21-34 99-18 8z" fill="url(#${prefix}-wrap-a)" stroke="#957854" stroke-width=".8"/><path d="m104 192 61 30 45-21-34 99-18 8z" fill="url(#${prefix}-wrap-lines)"/><path d="m108 196 51 104m7-77-5 62" fill="none" stroke="#a18462" stroke-width=".8"/></g>
-    <g class="bq-wrap-right"><path d="m214 185-53 28-47-8 44 103 22-8z" fill="url(#${prefix}-wrap-b)" stroke="#a38b68" stroke-width=".8"/><path d="m214 185-53 28-47-8 44 103 22-8z" fill="url(#${prefix}-grain)"/><path d="m212 188-50 80-4 39m-42-100 46 61" fill="none" stroke="#9a7a57" opacity=".6" stroke-width=".8"/></g>
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round" class="bq-ribbon">
-      <path d="M150 263q15 5 33-3" stroke="#7d4947" stroke-width="4.2"/><path d="M150 262q15 5 33-3" stroke="#ba8580" stroke-width="1.4"/>
-      <g class="bq-bow"><path d="M164 264c-14-13-23-17-26-12s10 17 26 12c12-18 23-22 25-16s-11 17-25 16Zm-2 2q-12 22-27 22m30-22q10 11 22 12" stroke="#814e51" stroke-width="3.6"/><path d="M164 264c-14-13-23-17-26-12s10 17 26 12c12-18 23-22 25-16s-11 17-25 16Zm-2 2q-12 22-27 22m30-22q10 11 22 12" stroke="#ca9990" stroke-width="1.1"/><ellipse cx="164" cy="264" rx="3.2" ry="2.4" fill="#9e6c69" stroke="#804f50" stroke-width=".7"/></g>
-    </g>
-    <g class="bq-tag"><path d="M165 264q25 2 33 19m-33-19q21 1 34 19" fill="none" stroke="#856d4e" stroke-width=".9"/><g transform="rotate(-11 195 284)"><path d="m191 277 8-5h55v20h-55l-8-5z" fill="#a89975" opacity=".4" transform="translate(1 1.2)"/><path d="m191 276 8-5h55v20h-55l-8-5z" fill="#f4ecd5" stroke="#9c8a69" stroke-width=".6"/><circle cx="197" cy="281" r="1.8" fill="#978664"/><text x="226" y="284" font-family="Georgia, serif" font-size="8.5" font-style="italic" fill="#514235" text-anchor="middle">For ${escape(name)}</text></g></g>
-  </g>`;
-}
-
 function chosenFlowers(config) {
   const types = config.flowerTypes || config.flowers;
-  if (!Array.isArray(types)) return FLOWERS;
+  if (!Array.isArray(types)) return cutFlowers;
   const allowed = new Set(types.map(item => typeof item === 'string' ? item : item?.type));
-  const filtered = FLOWERS.filter(flower => allowed.has(flower.type));
-  return filtered.length ? filtered : FLOWERS;
+  const choices = cutFlowers.filter(flower => allowed.has(flower.type));
+  return choices.length ? choices : cutFlowers;
 }
 
+// A rounded crown grows wider and taller with each new tier. Divide the stems
+// by the width of each chord so a full bouquet keeps its domed silhouette.
 function arrangement() {
   const { stems, arrangement: variant } = bouquet;
-  const ordered = stems.slice().sort((a, b) => {
-    const rank = stem => (['breath', 'lavender'].includes(stem.type) ? 0 : 1) +
-      (variant ? (Math.sin(stem.id * 71 + variant * 53) + 1) * .41 : stem.id / 1000);
-    return rank(a) - rank(b);
+  if (!stems.length) return [];
+  const n=stems.length, fullness=(n-1)/(LIMIT-1);
+  const tierCount=Math.ceil(Math.sqrt(n/2));
+  const weights=Array.from({length:tierCount},(_,i)=>{
+    const depth=tierCount===1?.5:i/(tierCount-1);
+    return .60+.40*Math.sin(Math.PI*(.09+depth*.83));
   });
-  const rows = ordered.length < 4 ? [ordered] : [
-    ordered.slice(0, Math.ceil(ordered.length * .57)), ordered.slice(Math.ceil(ordered.length * .57))
-  ];
-  return rows.flatMap((row, depth) => row.map((stem, i) => {
-    const across = row.length === 1 ? 0 : (i / (row.length - 1)) * 2 - 1;
-    const spread = Math.min(depth ? 73 : 93, Math.max(25, row.length * 23));
-    const jitter = Math.sin(stem.id * 89 + variant * 4) * 3.1;
-    const x = 160 + spread * across + jitter;
-    const y = (depth ? 153 : 106) + Math.abs(across) * (depth ? 8 : 23) +
-      Math.cos(stem.id * 3.9 + variant) * 4.5;
-    // The fan converges above the cut ends so that every stem actually enters the ribbon.
-    const angle = Math.atan2(x - 163, 260 - y);
-    const length = Math.hypot(x - 163, 260 - y) / 124;
-    const width = Math.min(.94, length * .86) * (depth ? 1.03 : .93);
-    const a = width * Math.cos(angle), b = width * Math.sin(angle);
-    const c = -length * Math.sin(angle), d = length * Math.cos(angle);
-    const matrix = [a,b,c,d,163 + c * 36,260 + d * 36];
-    return {stem, x, y, matrix: matrix.map(n => n.toFixed(4)).join(',')};
-  }));
+  const total=weights.reduce((a,b)=>a+b,0);
+  const quota=weights.map(w=>n*w/total);
+  const counts=quota.map(Math.floor);
+  const remaining=n-counts.reduce((a,b)=>a+b,0);
+  const fractions=quota.map((q,i)=>({i,remainder:q-counts[i]})).sort((a,b)=>b.remainder-a.remainder);
+  fractions.slice(0,remaining).forEach(({i})=>counts[i]++);
+  const rank=stem=>{
+    const airy=['breath','sweet-pea','lavender'].includes(stem.type);
+    const phase=stem.id*.61803399+Math.sin(stem.id*2.37+variant*1.61)*.29+variant*.23;
+    return (phase-Math.floor(phase))-(airy?.56:0);
+  };
+  const ordered=stems.slice().sort((a,b)=>rank(a)-rank(b));
+  const placements=[];
+  const nominalSpread=Math.min(121,45+Math.sqrt(n)*12);
+  for(let row=0;row<tierCount;row++){
+    const depth=tierCount===1?0:row/(tierCount-1);
+    const count=counts[row];
+    const spread=Math.min(nominalSpread*weights[row],(count-1)*(n<10?32:24));
+    for(let i=0;i<count;i++){
+      const stem=ordered[placements.length],across=count===1?0:2*i/(count-1)-1;
+      const wobble=Math.sin(stem.id*3.91+variant*.75);
+      const x=160+spread*across+wobble*2.3;
+      const y=(n===1?116:103-32*fullness)+depth*(37+70*fullness)+across*across*(13-7*fullness)+Math.cos(stem.id*1.91+variant)*3;
+      const angle=Math.atan2(x-165,258-y),length=Math.hypot(x-165,258-y)/124;
+      const width=(.96-fullness*.38)*(depth*.15+.87);
+      const a=width*Math.cos(angle),b=width*Math.sin(angle),c=-length*Math.sin(angle),d=length*Math.cos(angle);
+      const stemMatrix=[a,b,c,d,165+c*36,258+d*36];
+      const tilt=angle*.49+wobble*.27;
+      const size=(.9-.34*Math.sqrt(fullness))*(.94+.11*depth)*(1+wobble*.052);
+      const dx=size*Math.cos(tilt),dy=size*Math.sin(tilt);
+      const headMatrix=[dx,dy,-dy,dx,x,y];
+      const matrix=data=>'matrix('+data.map(v=>v.toFixed(4)).join(',')+')';
+      placements.push({stem,x,y,stemMatrix:matrix(stemMatrix),headMatrix:matrix(headMatrix)});
+    }
+  }
+  return placements;
 }
 
-export function mountBouquet(host, { onNext, config = {} } = {}) {
+function cutStem(type, seed) {
+  const bend=Math.sin(seed)*8;
+  const shaft='M0 0Q'+bend.toFixed(2)+' -84 0 -160';
+  const sparse=['breath','lavender','sweet-pea'].includes(type);
+  const slender=['white-lily','pink-lily','tulip','cosmos','lavender','cornflower'].includes(type);
+  const leaves=[];
+  for(let i=0;i<(sparse?2:4);i++){
+    const y=-39-i*22,side=i%2===0?-1:1;
+    const x=(bend*.45).toFixed(1),length=slender?40:30,w=slender?4:8;
+    leaves.push(`<g transform="translate(${x} ${y}) scale(${side} 1) rotate(25)"><path d="M0 0Q${-w} -12 1 -${length}Q${w+4} -14 0 0Z" fill="${i%2?'#85947b':'#6e826d'}" stroke="#596f60" stroke-width=".64"/><path d="M0 -1Q3 -17 1 -${length-2}" fill="none" stroke="#b2bb99" stroke-width=".6"/></g>`);
+  }
+  return `<path d="${shaft}" fill="none" stroke="#536f5e" stroke-width="1.85"/><path d="${shaft}" fill="none" stroke="#a8b28b" stroke-width=".62"/>${leaves.join('')}`;
+}
+
+function trimControls() {
+  const labels={paper:'Paper',pattern:'Print',ribbon:'Ribbon'};
+  return Object.entries(wrapChoices).map(([kind,options])=>
+    `<fieldset class="bq-trim-row"><legend>${labels[kind]}</legend><div class="bq-swatch-list">${Object.entries(options).map(([key,{name}])=>
+      `<button class="bq-trim-choice" type="button" data-${kind}="${key}" aria-label="${labels[kind]} · ${name}" aria-pressed="false" title="${name}">${swatch(kind,key)}</button>`).join('')}</div><span class="bq-selected-name" data-selected="${kind}"></span></fieldset>`
+  ).join('');
+}
+
+export function mountBouquet(host, { onNext, onSound = () => {}, config = {} } = {}) {
   const prefix = 'bouquet-' + (++mounts);
   const recipient = config.recipient || 'Fakhima';
   const choices = chosenFlowers(config);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const flyers = new Set();
   const nodes = new Map();
+  const movements = new Map();
+  let lastPlacement = -Infinity;
   let disposed = false;
   let saving = false;
 
@@ -130,23 +151,26 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
   root.setAttribute('aria-label', 'Make your bouquet');
   root.innerHTML = `<div class="bq-layout">
     <div class="bq-intro"><h1 class="bq-title" tabindex="-1"></h1><p class="bq-description"></p></div>
-    <div class="bq-paper"><svg class="bq-sheet" viewBox="0 0 320 350" xmlns="${SVG_NS}" role="img" aria-label="Your flower arrangement">${botanicalDefs(prefix)}${paper(prefix)}${emptyStudy(prefix)}<g class="bq-stems"></g><g class="bq-wrap-slot"></g></svg></div>
+    <div class="bq-paper"><svg class="bq-sheet" viewBox="0 0 320 350" xmlns="${SVG_NS}" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Your flower arrangement">${botanicalDefs(prefix)}${floristDefs(prefix,choices)}${paper(prefix)}${emptyStudy(prefix)}<g class="bq-tissue-slot"></g><g class="bq-stems"></g><g class="bq-wrap-slot"></g><g class="bq-heads"></g></svg></div>
     <div class="bq-controls"><div class="bq-tray" aria-label="Choose your flowers">
-      ${choices.map(({type,name}, i) => `<button type="button" data-flower="${type}" aria-label="Add ${escape(name)}" class="bq-choice"><svg class="bq-sample" aria-hidden="true" viewBox="-64 -240 128 250">${sprig(type, {seed: 24+i*41,prefix})}</svg><span class="bq-plus">${icon('plus')}</span><span class="bq-flower-name">${escape(name)}</span></button>`).join('')}
-    </div><div class="bq-tools"><span class="bq-count" aria-hidden="true"></span><div class="bq-tool-group"><button type="button" data-bq-action="undo" aria-label="Undo last flower" title="Undo last flower">${icon('undo')}<span>Undo</span></button><button type="button" data-bq-action="arrange" aria-label="Rearrange bouquet" title="Rearrange bouquet">${icon('arrange')}<span>Rearrange</span></button></div></div>
-    <div class="bq-actions"><button type="button" class="bq-primary" data-bq-action="wrap">Wrap my bouquet ${icon('arrow')}</button><button type="button" class="bq-primary" data-bq-action="next">Open your letter ${icon('arrow')}</button><button type="button" class="bq-secondary" data-bq-action="save">${icon('save')} Save PNG</button><button type="button" class="bq-secondary" data-bq-action="edit">Unwrap</button></div></div>
+      ${choices.map(({type,name}) => `<button type="button" data-flower="${type}" aria-label="Add ${escape(name)}" class="bq-choice"><svg class="bq-sample" aria-hidden="true" viewBox="-53 -53 106 92"><path d="M-5 33Q2 15 0 0m-2 24q14-1 15-12-12 2-15 12Z" stroke="#9fa887" stroke-width="1.1" fill="#70876f"/>${useArt(flowerId(prefix,type))}</svg><span class="bq-quantity" aria-hidden="true"></span><span class="bq-flower-name">${escape(name)}</span></button>`).join('')}
+    </div><div class="bq-tools"><span class="bq-tally"><span class="bq-count"></span><span class="bq-capacity"> / ${LIMIT}</span></span><div class="bq-tool-group"><button type="button" data-bq-action="undo" aria-label="Undo last flower" title="Undo last flower">${icon('undo')}<span>Undo</span></button><button type="button" data-bq-action="arrange" aria-label="Rearrange bouquet" title="Rearrange bouquet">${icon('arrange')}<span>Rearrange</span></button></div></div>
+    <div class="bq-trims" aria-label="Customize your wrap" hidden>${trimControls()}</div>
+    <div class="bq-actions"><button type="button" class="bq-primary" data-bq-action="wrap">Choose your wrap ${icon('arrow')}</button><button type="button" class="bq-primary" data-bq-action="next">Open your letter ${icon('arrow')}</button><button type="button" class="bq-secondary" data-bq-action="save">${icon('save')} Save PNG</button><button type="button" class="bq-secondary" data-bq-action="edit">Edit flowers</button></div></div>
     <span class="bq-sr" role="status" aria-live="polite" aria-atomic="true"></span>
   </div>`;
   host.append(root);
   const $ = selector => root.querySelector(selector);
   const sheet = $('.bq-sheet');
   const stemsLayer = $('.bq-stems');
+  const headsLayer = $('.bq-heads');
+  const tissueSlot = $('.bq-tissue-slot');
   const wrapSlot = $('.bq-wrap-slot');
   const speak = message => { $('.bq-sr').textContent = message; };
 
   function fly(button, placed) {
     const svgMatrix = sheet.getScreenCTM();
-    if (reduced.matches || !svgMatrix || !Element.prototype.animate) return 0;
+    if (reduced.matches || !svgMatrix || !Element.prototype.animate || flyers.size >= 4) return 0;
     const sample = button.querySelector('svg');
     const origin = sample.getBoundingClientRect();
     const target = sheet.createSVGPoint();
@@ -156,13 +180,14 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
     const startY = origin.top + origin.height * .25;
     const dx = end.x - startX, dy = end.y - startY;
     const float = document.createElementNS(SVG_NS, 'svg');
-    float.setAttribute('viewBox', '-58 -220 116 236');
+    float.setAttribute('viewBox', '-52 -56 104 112');
     float.setAttribute('aria-hidden', 'true');
     float.setAttribute('class', 'bq-fly');
-    float.style.left = (startX - 29) + 'px'; float.style.top = (startY - 15) + 'px';
+    float.style.left = (startX - 29) + 'px'; float.style.top = (startY - 29) + 'px';
     const instance = document.createElementNS(SVG_NS, 'use');
-    instance.setAttribute('href', '#' + prefix + '-stem-' + placed.stem.id);
-    instance.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#' + prefix + '-stem-' + placed.stem.id);
+    const href='#'+flowerId(prefix,placed.stem.type,placed.stem.id%2);
+    instance.setAttribute('href',href);
+    instance.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',href);
     float.append(instance);
     document.body.append(float);
     flyers.add(float);
@@ -177,51 +202,99 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
     return 315;
   }
 
-  function render({ added, from } = {}) {
-    const { wrapped, stems } = bouquet;
-    const layout = arrangement();
-    const currentIds = new Set(stems.map(stem => stem.id));
-    for (const [id, g] of nodes) if (!currentIds.has(id)) { g.remove(); nodes.delete(id); }
-    for (const placed of layout) {
-      const {stem, matrix} = placed;
-      let g = nodes.get(stem.id);
-      const fresh = !g;
-      if (fresh) {
-        g = document.createElementNS(SVG_NS, 'g');
-        g.innerHTML = `<g id="${prefix}-stem-${stem.id}">${sprig(stem.type,{seed:stem.seed,prefix})}</g>`;
-        nodes.set(stem.id, g);
+  function position(node, matrix, animate) {
+    const before=node.getAttribute('transform');
+    if(before===matrix) return;
+    const running=movements.get(node);
+    running?.cancel();
+    movements.delete(node);
+    node.setAttribute('transform',matrix);
+    if(!animate || !before || !node.animate) return;
+    const tween=node.animate([{transform:before},{transform:matrix}],{duration:470,easing:'cubic-bezier(.22,.76,.3,1)'});
+    movements.set(node,tween);
+    tween.onfinish=()=>{if(movements.get(node)===tween)movements.delete(node);};
+  }
+
+  function drawStems(added, from) {
+    const keep = new Set(bouquet.stems.map(stem=>stem.id));
+    for(const [id, item] of nodes) {
+      if(keep.has(id)) continue;
+      for(const node of [item.cut,item.head]) {
+        movements.get(node)?.cancel(); movements.delete(node); node.remove();
       }
-      const old = g.getAttribute('transform');
-      const next = 'matrix(' + matrix + ')';
-      stemsLayer.append(g);
-      g.setAttribute('transform', next);
-      if (reduced.matches || !g.animate) continue;
-      if (fresh && added === stem.id && from) {
-        const delay = fly(from, placed);
-        g.animate([{opacity:0},{opacity:1}],{duration:270,delay,fill:'backwards'});
-      } else if (old && old !== next) {
-        g.animate([{transform:old},{transform:next}],{duration:570,easing:'cubic-bezier(.22,.76,.3,1)'});
+      nodes.delete(id);
+    }
+    const now=performance.now(),animate=!reduced.matches && now-lastPlacement>95;
+    lastPlacement=now;
+    const layout=arrangement();
+    for(const [index,placed] of layout.entries()) {
+      const {stem,stemMatrix,headMatrix}=placed;
+      let item=nodes.get(stem.id);
+      if(!item) {
+        const cut=document.createElementNS(SVG_NS,'g'),head=document.createElementNS(SVG_NS,'g');
+        cut.innerHTML=cutStem(stem.type,stem.seed);head.innerHTML=useArt(flowerId(prefix,stem.type,stem.id%2));
+        cut.dataset.stemId=String(stem.id);head.dataset.stemId=String(stem.id);
+        item={cut,head};nodes.set(stem.id,item);
+      }
+      // Only move a painted group in the document when its depth changes.
+      if(stemsLayer.children[index]!==item.cut)stemsLayer.insertBefore(item.cut,stemsLayer.children[index]||null);
+      if(headsLayer.children[index]!==item.head)headsLayer.insertBefore(item.head,headsLayer.children[index]||null);
+      position(item.cut,stemMatrix,animate);position(item.head,headMatrix,animate);
+      if(added===stem.id && from && !reduced.matches && item.head.animate){
+        const delay=fly(from,placed);
+        item.head.animate([{opacity:0},{opacity:1}],{duration:240,delay,fill:'backwards'});
       }
     }
-    $('.bq-empty').setAttribute('opacity', stems.length ? 0 : 1);
-    sheet.setAttribute('aria-label', stems.length ? `${wrapped ? 'Wrapped bouquet' : 'Bouquet'} with ${stems.length} ${stems.length === 1 ? 'stem' : 'stems'}` : 'A pencil study on an empty sheet of flower-press paper');
-    if (wrapped && !wrapSlot.firstElementChild) wrapSlot.innerHTML = wrapArt(prefix,recipient);
-    if (!wrapped) wrapSlot.replaceChildren();
-    if (wrapped) stemsLayer.setAttribute('clip-path', `url(#${prefix}-tucked)`);
-    else stemsLayer.removeAttribute('clip-path');
-    root.classList.toggle('is-wrapped', wrapped);
-    const heading = wrapped ? `Flowers for <em>${escape(recipient)}.</em>` : 'Pick your <em>flowers.</em>';
-    if ($('.bq-title').innerHTML !== heading) $('.bq-title').innerHTML = heading;
-    $('.bq-description').textContent = wrapped ? (config.bouquetMessage || 'Ye wale kabhi murjhayenge bhi nahi btw.') : 'Tap the stems you like. Ek daisy aur bhi le lo :3';
-    $('.bq-tray').hidden = wrapped;
-    $('.bq-tools').hidden = wrapped;
-    $('[data-bq-action="wrap"]').hidden = wrapped;
-    for (const key of ['edit','next','save']) $('[data-bq-action="' + key + '"]').hidden = !wrapped;
-    $('[data-bq-action="wrap"]').disabled = !stems.length;
-    $('[data-bq-action="undo"]').disabled = !stems.length;
-    $('[data-bq-action="arrange"]').disabled = stems.length < 2;
-    root.querySelectorAll('[data-flower]').forEach(button => { button.disabled = stems.length >= LIMIT; });
-    $('.bq-count').textContent = stems.length === LIMIT ? 'Bouquet full' : `${stems.length} ${stems.length === 1 ? 'stem' : 'stems'}`;
+  }
+
+  function drawWrap(fold=false) {
+    if(!bouquet.wrapped) {
+      tissueSlot.replaceChildren();wrapSlot.replaceChildren();
+      stemsLayer.removeAttribute('clip-path'); return;
+    }
+    const art=makeWrap(prefix,bouquet.wrap,escape(recipient));
+    tissueSlot.innerHTML=art.back;wrapSlot.innerHTML=art.front;
+    if(config.bouquetMessage){
+      const note=document.createElementNS(SVG_NS,'text');
+      for(const [key,value] of Object.entries({x:'160',y:'328','text-anchor':'middle','font-size':'8.4','font-family':'Georgia, serif','font-style':'italic',fill:'#655840'})) note.setAttribute(key,value);
+      note.textContent=config.bouquetMessage;
+      wrapSlot.append(note);
+    }
+    wrapSlot.classList.toggle('bq-folding',fold);
+    stemsLayer.setAttribute('clip-path',`url(#${prefix}-tucked)`);
+    for(const kind of Object.keys(wrapChoices)){
+      root.querySelectorAll('[data-'+kind+']').forEach(control=>{
+        control.setAttribute('aria-pressed',String(control.dataset[kind]===bouquet.wrap[kind]));
+      });
+      $('[data-selected="'+kind+'"]').textContent=wrapChoices[kind][bouquet.wrap[kind]].name;
+    }
+  }
+
+  function render({added,from,fold=false}={}) {
+    const {wrapped,stems}=bouquet;
+    drawStems(added,from);drawWrap(fold);
+    $('.bq-empty').setAttribute('opacity',stems.length?0:1);
+    const count=stems.length+' '+(stems.length===1?'stem':'stems');
+    sheet.setAttribute('aria-label',stems.length?(wrapped?'Wrapped bouquet':'Bouquet')+' with '+count:'A pencil study on flower-press paper');
+    root.classList.toggle('is-wrapped',wrapped);
+    const heading=wrapped?'Dress your <em>bouquet.</em>':'Pick your <em>flowers.</em>';
+    if($('.bq-title').innerHTML!==heading)$('.bq-title').innerHTML=heading;
+    $('.bq-description').textContent=wrapped?'Pick a paper, a print and a ribbon.':'Tap to add a stem. Ek daisy aur bhi le lo :3';
+    $('.bq-tray').hidden=wrapped;$('.bq-tools').hidden=wrapped;$('.bq-trims').hidden=!wrapped;
+    $('[data-bq-action="wrap"]').hidden=wrapped;
+    for(const key of ['edit','next','save'])$('[data-bq-action="'+key+'"]').hidden=!wrapped;
+    $('[data-bq-action="wrap"]').disabled=!stems.length;
+    $('[data-bq-action="undo"]').disabled=!stems.length;
+    $('[data-bq-action="arrange"]').disabled=stems.length<2;
+    const quantities=new Map();
+    stems.forEach(({type})=>quantities.set(type,(quantities.get(type)||0)+1));
+    root.querySelectorAll('[data-flower]').forEach(button=>{
+      const quantity=quantities.get(button.dataset.flower)||0;
+      button.disabled=stems.length>=LIMIT;
+      button.querySelector('.bq-quantity').textContent=quantity?String(quantity):'+';
+      button.classList.toggle('bq-has-flower',quantity>0);
+    });
+    $('.bq-count').textContent=count;
   }
 
   async function save() {
@@ -235,6 +308,8 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
       const copy = sheet.cloneNode(true);
       copy.removeAttribute('class');
       copy.querySelector('.bq-empty')?.remove();
+      const used=new Set(bouquet.stems.map(stem=>flowerId(prefix,stem.type,stem.id%2)));
+      copy.querySelectorAll('[id^="'+prefix+'-cut-"]').forEach(node=>{if(!used.has(node.id))node.remove();});
       copy.setAttribute('width','960'); copy.setAttribute('height','1050');
       const svg = new XMLSerializer().serializeToString(copy);
       sourceUrl = URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
@@ -253,6 +328,7 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
       a.href = fileUrl; a.download = `Flowers for ${recipient}.png`; a.target = '_blank'; a.rel = 'noopener';
       document.body.append(a); a.click(); a.remove();
       window.setTimeout(() => URL.revokeObjectURL(fileUrl), 30_000);
+      onSound('save');
       speak('Your bouquet PNG is ready.');
     } catch {
       speak('You can also keep your flowers with a screenshot.');
@@ -271,17 +347,28 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
       const type = button.dataset.flower;
       const id = bouquet.nextId++;
       bouquet.stems.push({id,type,seed: 71 * id + 13});
+      onSound('flower');
       render({added:id, from:button});
       speak(`${choices.find(f => f.type === type).name} added. ${$('.bq-count').textContent}.`);
       return;
     }
+    for(const kind of Object.keys(wrapChoices)){
+      const option=button.dataset[kind];
+      if(bouquet.wrapped && option && wrapChoices[kind][option]){
+        if(bouquet.wrap[kind]!==option){
+          bouquet.wrap[kind]=option; drawWrap(); onSound(kind);
+          speak(wrapChoices[kind][option].name+' selected.');
+        }
+        return;
+      }
+    }
     switch (button.dataset.bqAction) {
-      case 'undo': bouquet.stems.pop(); render(); speak('Last flower removed. ' + $('.bq-count').textContent + '.'); break;
-      case 'arrange': bouquet.arrangement++; render(); speak('Flowers rearranged.'); break;
+      case 'undo': bouquet.stems.pop(); render(); onSound('undo'); speak('Last flower removed. ' + $('.bq-count').textContent + '.'); break;
+      case 'arrange': bouquet.arrangement++; render(); onSound('arrange'); speak('Flowers rearranged.'); break;
       case 'wrap':
-        bouquet.wrapped = true; render(); $('.bq-title').focus({preventScroll: true}); speak('Your bouquet is wrapped.'); break;
+        bouquet.wrapped = true; render({fold:true}); onSound('wrap'); root.scrollTop=0; $('.bq-title').focus({preventScroll: true}); speak('Choose your paper, print and ribbon.'); break;
       case 'edit':
-        bouquet.wrapped = false; render(); $('.bq-title').focus({preventScroll: true}); break;
+        bouquet.wrapped = false; render(); onSound('unwrap'); root.scrollTop=0; $('.bq-title').focus({preventScroll: true}); break;
       case 'save': void save(); break;
       case 'next': onNext?.(); break;
     }
@@ -294,6 +381,7 @@ export function mountBouquet(host, { onNext, config = {} } = {}) {
     root.removeEventListener('click',click);
     for (const float of flyers) { float.getAnimations?.().forEach(a => a.cancel()); float.remove(); }
     flyers.clear();
+    movements.forEach(tween=>tween.cancel());movements.clear();
     root.remove();
   };
 }
