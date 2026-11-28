@@ -15,12 +15,12 @@ export const config = {
   timing: { firstBloom: 8700, gardenBloom: 7400, wake: 740 },
   chapters: ['The sleeping garden', 'The first daisy', 'Lilies in bloom', 'The birthday garden', 'Your bouquet', 'A small note', 'Small surprises', 'With love'],
   letter: [
-    'Hellos Fakhima ',
-    'HAPPIEST BIRTHDAY. I hope this year is really good to you and you get everything you want from yourself that you told me about.',
-    'Allah kare apke iss saal bilkul bhi na lagein kahin se bhi nahi aaur relegate bhi na ho',
-    'Birthday toh apki hai lekin I wish ke hum dono hamesha sath rahein so I can make you websites like this',
-    'I hope there’s lots of time this year for the things you like. And fresh gajre. And days when you just get to be happy for no particular reason.',
-    'LOVE YOU SM FAKHIMA Happy birthday once again, Stay blesssed Stay whimsical Stay safe.',
+    'HAPPY BIRTHDAY FAKHIMA ',
+    'I hope this year is really kind to you and you get everything you want from yourself that you told me about.',
+    'Allah kare apke iss saal bilkul bhi na lagein kahin se bhi nahi aur relegate bhi na ho',
+    'Birthday toh apki hai lekin I wish ke hum dono hamesha sath rahein so I can always make websites for you like this',
+    'I hope there’s lots of time this year for the things you like. And days when you just get to be happy for no particular reason.',
+    'LOVE YOU SM  FAKHIMA, Happy birthday once again, Stay blesssed, Stay whimsical and Stay safe hamesha.',
     'With love, Ruman'
   ],
   surprises: [
