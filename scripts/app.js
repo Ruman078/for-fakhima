@@ -87,6 +87,9 @@ async function go(page,focus=true){
     if(moving)transition=scene.animate([{opacity},{opacity:1}],{duration:170,easing:'ease-out'});
   }
   if(page===current){resumeAdvance();return;}
+  const waking=awakening && page===1;
+  // Give the tap its sound inside the gesture, including on a cold chapter load.
+  if(current>=0 && !waking)sound.play(page===7?'finale':page===3?'birthday':page===2?'bloom':'chapter');
   // Keep the current illustration on screen while a first visit loads its
   // feature. Slow connections and quick chapter changes share this path.
   let feature;
@@ -98,17 +101,13 @@ async function go(page,focus=true){
     return;
   }
   if(token!==serial) return;
-  const waking=awakening && page===1;
-  if(current>=0 && !waking) {
-    sound.play(page===7?'finale':page===3?'birthday':page===2?'bloom':'chapter');
-    if(moving){
-      const opacity=getComputedStyle(scene).opacity;
-      transition?.cancel();
-      scene.inert=true;
-      transition=scene.animate([{opacity},{opacity:0}],{duration:180,easing:'ease-in',fill:'forwards'});
-      await transition.finished.catch(()=>{});
-      if(token!==serial)return;
-    }
+  if(current>=0 && !waking && moving) {
+    const opacity=getComputedStyle(scene).opacity;
+    transition?.cancel();
+    scene.inert=true;
+    transition=scene.animate([{opacity},{opacity:0}],{duration:180,easing:'ease-in',fill:'forwards'});
+    await transition.finished.catch(()=>{});
+    if(token!==serial)return;
   }
   transition?.cancel();
   schedule?.cancel();cleanup?.();cleanup=null;schedule=timeline();pendingAdvance=null;
