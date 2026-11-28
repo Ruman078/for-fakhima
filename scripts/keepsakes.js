@@ -208,12 +208,15 @@ export function mountDiscoveries(host, { onNext, config, onSound, foundNotes: fo
     <h2 id="ks-discovery-heading" class="ks-heading">Little <i>surprises.</i></h2>
     <div class="ks-bed"></div>
     <div class="ks-garden-foot">
-      <div class="ks-noteslot" aria-live="polite" aria-atomic="true"><p class="ks-discovery-hint">Tap a flower, a strawberry or a ladybug.</p></div>
+      <div class="ks-noteslot">
+        <div class="ks-note-sizes" aria-hidden="true">${config.surprises.map(note => `<span>${escapeText(note)}</span>`).join('')}</div>
+        <div class="ks-note-live" aria-live="polite" aria-atomic="true"><p class="ks-discovery-hint">Tap a flower, a strawberry or a ladybug.</p></div>
+      </div>
       <div class="ks-discovery-actions"><span class="ks-count">${found.size} of ${finds.length} found</span><button type="button" class="ks-action">To the finale ${arrow}</button></div>
     </div>`;
   host.replaceChildren(scene);
   const bed = scene.querySelector('.ks-bed');
-  const slot = scene.querySelector('.ks-noteslot');
+  const slot = scene.querySelector('.ks-note-live');
   const count = scene.querySelector('.ks-count');
   let selected = '';
   let width = 0;
