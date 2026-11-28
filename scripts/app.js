@@ -26,10 +26,23 @@ function showSound(state) {
   button.querySelector('.tool-text').textContent=status[state];
   button.querySelector('.sound-icon').innerHTML=enabled?icons.sound:icons.silent;
 }
-const environment=landscape(plate,config.quality),garden=mountGarden($('#garden')),sound=gardenSound(showSound);
+const sound=gardenSound(showSound);
+const environment=landscape(plate,config.quality,()=>sound.play('fern')),garden=mountGarden($('#garden'));
 $('#sound').hidden=!sound.available;
-let current=-1,schedule,cleanup,serial=0,awakening=false,locked=false;
+let current=-1,requested=-1,schedule,cleanup,transition,serial=0,awakening=false,locked=false;
 let bouquetModule;
+const chapterModules=new Map(),moduleAttempts=new Map();
+function loadChapterModule(file){
+  if(!chapterModules.has(file)){
+    const attempt=moduleAttempts.get(file)||0;
+    const url='./'+file+'.js'+(attempt?'?retry='+attempt:'');
+    const loading=import(url).catch(error=>{
+      chapterModules.delete(file);moduleAttempts.set(file,attempt+1);throw error;
+    });
+    chapterModules.set(file,loading);
+  }
+  return chapterModules.get(file);
+}
 const foundNotes = new Set();
 const button=(label,action,icon=icons.right)=>`<button class="garden-button" data-action="${action}">${label}${icon}</button>`;
 const date=`<div class="date-line"><span></span>${escapeText(config.birthday)}<span></span></div>`;
@@ -63,32 +76,64 @@ function syncNav(){
   $('#announce').textContent='Chapter '+(current+1)+'. '+title;
 }
 async function go(page,focus=true){
-  if(page<0 || page>7 || page===current) return;
-  if(current>=0 && !(awakening && page===1)) {
-    sound.play(page===7?'finale':page===3?'birthday':page===2?'bloom':'chapter');
-  }
+  if(page<0 || page>7 || page===requested) return;
+  requested=page;
   const token=++serial;
-  schedule?.cancel();cleanup?.();cleanup=null;schedule=timeline();
   if(!map.hidden)closeMap(false);
+  const moving=focus && !reducedMotion.matches && typeof scene.animate==='function';
+  if(scene.inert){
+    const opacity=getComputedStyle(scene).opacity;
+    transition?.cancel();scene.inert=false;
+    if(moving)transition=scene.animate([{opacity},{opacity:1}],{duration:170,easing:'ease-out'});
+  }
+  if(page===current){resumeAdvance();return;}
+  // Keep the current illustration on screen while a first visit loads its
+  // feature. Slow connections and quick chapter changes share this path.
+  let feature;
+  try {
+    if(page===4)feature=await loadChapterModule('bouquet');
+    if(page===5 || page===6)feature=await loadChapterModule('keepsakes');
+  } catch {
+    if(token===serial){requested=current;$('#announce').textContent='Tap the chapter again to load it.';resumeAdvance();}
+    return;
+  }
+  if(token!==serial) return;
+  const waking=awakening && page===1;
+  if(current>=0 && !waking) {
+    sound.play(page===7?'finale':page===3?'birthday':page===2?'bloom':'chapter');
+    if(moving){
+      const opacity=getComputedStyle(scene).opacity;
+      transition?.cancel();
+      scene.inert=true;
+      transition=scene.animate([{opacity},{opacity:0}],{duration:180,easing:'ease-in',fill:'forwards'});
+      await transition.finished.catch(()=>{});
+      if(token!==serial)return;
+    }
+  }
+  transition?.cancel();
+  schedule?.cancel();cleanup?.();cleanup=null;schedule=timeline();pendingAdvance=null;
   current=page;awakening=false;book.classList.remove('awakening');
   book.dataset.stage=String(page);
   environment.setStage(page);garden.setStage(page);syncNav();
   scene.scrollTop=0;scene.className='scene scene-'+page;
   scene.innerHTML=content(page);
-  if(page===4 || page===5 || page===6) {
-    const feature=page===4?await import('./bouquet.js'):await import('./keepsakes.js');
-    if(token!==serial)return;
+  if(feature) {
     const mount=page===4?feature.mountBouquet:page===5?feature.mountLetter:feature.mountDiscoveries;
     if(page===4)bouquetModule=feature;
     cleanup=mount(scene,{config,foundNotes,onSound:sound.play,onNext:()=>{if(page===current)go(page+1);}});
   }
-  if(focus){
+  scene.inert=false;
+  if(moving){
+    transition=scene.animate([{opacity:0,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],
+      {duration:waking?650:420,easing:'cubic-bezier(.2,.68,.25,1)'});
+  }
+  if(focus && map.hidden){
     const anchor=scene.querySelector('h1,h2')||scene;
     anchor.tabIndex=-1;anchor.focus({preventScroll:true});
   }
   if(page===1 || page===2) {
     const delay=reducedMotion.matches?(page===1?1800:2100):(page===1?config.timing.firstBloom:config.timing.gardenBloom);
-    schedule.after(delay,()=>{if(map.hidden)go(page+1);else pendingAdvance=page;});
+    schedule.after(delay,()=>{if(map.hidden && requested===current)go(page+1);else pendingAdvance=page;});
     if(page===1 && !reducedMotion.matches) schedule.after(5100,()=>{if(map.hidden)sound.play('bloom');});
   }
 }
@@ -100,7 +145,10 @@ function wake(event){
   const ripple=document.createElement('span');ripple.className='light-ripple';
   ripple.style.left=(x-rect.left)+'px';ripple.style.top=(y-rect.top)+'px';
   plate.append(ripple);setTimeout(()=>ripple.remove(),1650);
-  book.classList.add('awakening');sound.play('wake');schedule.after(reducedMotion.matches?80:config.timing.wake,()=>go(1));
+  book.classList.add('awakening');sound.play('wake');
+  schedule.after(reducedMotion.matches?80:config.timing.wake,()=>{
+    if(map.hidden && requested===0)go(1);else pendingAdvance=0;
+  });
 }
 async function replay(){bouquetModule?.resetBouquet?.();foundNotes.clear();await go(0);}
 scene.addEventListener('click',event=>{
@@ -121,6 +169,13 @@ function turn(delta){
 $('#prev').addEventListener('click',()=>turn(-1));$('#next').addEventListener('click',()=>turn(1));
 $('#sound').addEventListener('click',sound.toggle);
 let pendingAdvance=null;
+function resumeAdvance(){
+  if(pendingAdvance!==current || requested!==current)return;
+  const page=current;pendingAdvance=null;
+  schedule.after(1100,()=>{
+    if(map.hidden && requested===page)go(page+1);else pendingAdvance=page;
+  });
+}
 function openMap(){
   sound.play('menuOpen');
   map.hidden=false;
@@ -131,8 +186,7 @@ function closeMap(focus=true){
   if(focus)sound.play('menuClose');
   map.hidden=true;book.inert=false;book.removeAttribute('aria-hidden');environment.pause(false);
   if(focus)$('#chapters').focus({preventScroll:true});
-  const page=pendingAdvance;pendingAdvance=null;
-  if(focus && page===current)schedule.after(1100,()=>go(page+1));
+  if(focus)resumeAdvance();
 }
 $('#chapters').addEventListener('click',openMap);$('#close-chapters').addEventListener('click',()=>closeMap());
 map.addEventListener('click',event=>{

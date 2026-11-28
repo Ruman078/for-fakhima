@@ -16,10 +16,14 @@
 }
 .g-left { left: -1.5%; }
 .g-right { right: -1.5%; transform: scaleX(-1); transform-origin: center bottom; }
-.g-print, .g-growing { display: block; width: 100%; height: 100%; }
-.g-print {transform-origin:12% 100%;animation:g-grasses 11s ease-in-out infinite alternate;}
-.g-right .g-print {animation-duration:12.7s;animation-delay:-5s;}
-@keyframes g-grasses {from{transform:rotate(-.14deg);}to{transform:rotate(.16deg);}}
+.g-print, .g-growing, .g-back-bank, .g-open-bank { display:block;width:100%;height:100%; }
+.g-back-bank {position:relative;transform-origin:12% 100%;animation:g-grasses 17s ease-in-out infinite;}
+.g-right .g-back-bank {animation-duration:18.8s;animation-direction:reverse;animation-delay:-2.7s;}
+.g-open-bank {position:absolute;inset:0;opacity:1;transition:opacity 1.8s ease .2s;}
+:is([data-botany="0"],[data-botany="1"]) .g-open-bank {opacity:0;transition-delay:0s;}
+[data-botany="2"] .g-open-bank {animation:g-bank-opening 2.1s .3s ease both;}
+@keyframes g-bank-opening {from{opacity:0;}to{opacity:1;}}
+@keyframes g-grasses {0%,100%{transform:rotate(-.1deg);}28%{transform:rotate(.23deg);}45%{transform:rotate(.11deg);}69%{transform:rotate(-.26deg);}}
 .g-growing { position: absolute; inset: 0; }
 .g-canopy {
   position: absolute;
@@ -73,6 +77,10 @@
   animation-delay: calc(1390ms + var(--plant-delay,0ms));
 }
 [data-botany="1"] .g-hero { animation: g-breeze 8.2s 4.4s ease-in-out infinite alternate; }
+.g-sway {transform-origin:0 0;animation:g-stem-sway var(--gust-time) var(--gust-offset) ease-in-out infinite;}
+[data-botany="1"] .g-hero .b-nod {animation:g-blossom-nod 14s 4.1s ease-in-out infinite;transform-origin:0 0;}
+@keyframes g-stem-sway {0%,100%{transform:rotate(-.26deg);}23%{transform:rotate(.52deg);}43%{transform:rotate(.36deg);}67%{transform:rotate(-.42deg);}79%{transform:rotate(-.17deg);}}
+@keyframes g-blossom-nod {0%,100%{transform:rotate(0) scaleY(1);}24%{transform:rotate(.55deg) scaleY(.984);}53%{transform:rotate(-.3deg) scaleY(1.009);}78%{transform:rotate(.15deg) scaleY(.996);}}
 @keyframes b-stem { from {stroke-dashoffset:1;} to {stroke-dashoffset:0;} }
 @keyframes b-leaf { from {transform:scale(.13,.27) rotate(17deg);opacity:0;} 17% {opacity:1;} to {transform:scale(1) rotate(0);} }
 @keyframes b-petal {
@@ -115,7 +123,8 @@
 [data-botany="7"] .g-wreath {display:block; animation:g-crown 2.1s cubic-bezier(.23,.55,.23,1) both;}
 @keyframes g-crown { from {opacity:0;transform:translate(-50%,-47%) scale(.94) rotate(-2deg);} to {opacity:1;transform:translate(-50%,-50%) scale(1);} }
 :is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-bank {opacity:.45; translate:0 6%;}
-:is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-print {animation-play-state:paused;}
+:is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-back-bank {animation-play-state:paused;}
+[data-botany="0"] .g-bank {opacity:.75;}
 :is([data-botany="4"],[data-botany="5"],[data-botany="6"]) .g-canopy { opacity:.42; }
 [data-botany="7"] .g-bank {opacity:.74;}
 @media(max-width:650px) {
@@ -132,6 +141,7 @@
 }
 @media(max-width:650px) and (max-height:740px) {
   .g-bank {width:max(93%,245px);bottom:-2.3%;}
+  :is([data-botany="2"],[data-botany="3"]) .g-bank {width:max(85%,232px);bottom:-3.8%;}
   .g-left {left:-11%;}
   .g-right {right:-8%;}
   .g-hero {height:50%;}

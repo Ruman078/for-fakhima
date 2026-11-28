@@ -64,6 +64,7 @@ export function mountLetter(host, { onNext, config, onSound }) {
   const nextButton = scene.querySelector('.ks-next');
   const setOpen = open => {
     onSound?.(open ? 'letterOpen' : 'letterFold');
+    scene.classList.toggle('ks-refolding', !open && !reducedMotion());
     scene.dataset.open = String(open);
     openButton.hidden = open;
     closeButton.hidden = !open;
@@ -106,16 +107,17 @@ const finds = [
 
 function butterfly() {
   const wing = '<path d="M0 1C-8 -13 -26 -26 -28 -22C-33 -12 -23 4 -8 7C-21 7 -22 17 -16 20C-8 20 -3 13 0 5Z" fill="url(#ks-wing)" stroke="#675032" stroke-width="1.3"/><path d="M-2 2Q-15 -13 -26 -20M-2 4Q-18 -6 -28 -11M-3 5Q-18 -1 -24 -3M-3 7Q-12 12 -17 16" fill="none" stroke="#795c45" stroke-width="1.1"/><g fill="#ffeabb"><circle cx="-24" cy="-17" r="1.3"/><circle cx="-26" cy="-12" r="1.4"/><circle cx="-24" cy="-7" r="1.2"/><circle cx="-16" cy="16" r="1.3"/></g>';
-  return `<g transform="rotate(-14)"><g class="ks-flight"><g class="ks-wing-left">${wing}</g><g transform="scale(-1 1)"><g class="ks-wing-right">${wing}</g></g><path d="M0 11Q-3 2 -.5 -5Q1 -9 2 -5Q4 1 0 11Z" fill="#382f27"/><path d="M0 -5Q-3 -13 -5 -13M1 -5Q5 -14 7 -12" fill="none" stroke="#e2bd86" stroke-width=".8"/></g></g>`;
+  return `<g transform="rotate(-25) scale(.85 .78)"><g class="ks-flight"><g class="ks-wing-left">${wing}</g><g transform="scale(-.73 .95) skewY(12)"><g class="ks-wing-right">${wing}</g></g><path d="M0 11Q-3 2 -.5 -5Q1 -9 2 -5Q4 1 0 11Z" fill="#382f27"/><path d="M0 -5Q-3 -13 -5 -13M1 -5Q5 -14 7 -12" fill="none" stroke="#e2bd86" stroke-width=".8"/></g></g>`;
 }
 
 function ladybug(key, angle) {
   const mirrored=key==='bug-path' || key==='bug-berry'?-1:1;
+  const scale={bug:.91,'bug-clover':.77,'bug-path':.82,'bug-berry':.86}[key];
   const leaf=key==='bug-berry' || key==='bug-clover'
     ? '<g transform="translate(-12 18) rotate(30) scale(1.35)"><use href="#ks-leaf-fan" xlink:href="#ks-leaf-fan"/></g>'
-    : '<path d="M-33 18Q-18 -9 22 -12Q18 13 -15 18Q-23 18 -33 18Z" fill="url(#ks-leaf)" stroke="#9ba183" stroke-width=".65"/><path d="M-31 18Q-17 9 18 -10M-20 13l5-10m4 5 6-10M3 2l7-8m-17 13 12-2" fill="none" stroke="#c2bf8d" opacity=".7" stroke-width=".65"/>';
-  return `<g transform="scale(${mirrored} 1)"><path d="M-40 52Q-26 30-18 19Q-6 9 1 -1" fill="none" stroke="#84976f" stroke-width="1.6"/>${leaf}</g>
-    <g class="ks-bug-travel"><g class="ks-beetle-breeze"><g transform="rotate(${angle})"><g stroke="#292b23" stroke-width="1.55" fill="none"><path d="M-6 -3l-4 -3m4 6l-5 1m6 3l-4 4M6 -3l4 -3M6 0l5 1M5 4l4 4"/></g><ellipse cy="-5" rx="5.5" ry="6.8" fill="#282b26"/><ellipse rx="7.8" ry="9.5" fill="url(#ks-bug-shell)" stroke="#403429" stroke-width=".86"/><path d="M0 -8.5Q1 0 0 9" stroke="#47362b" fill="none"/><g fill="#372f29"><circle cx="-3.5" cy="-3" r="1.65"/><circle cx="3.3" cy="-2" r="1.8"/><circle cx="-3" cy="3.8" r="1.5"/><circle cx="3.5" cy="4.5" r="1.4"/></g><path d="M-5 -3Q-5 -6 -3.5 -6.5" fill="none" stroke="#fad5b9" stroke-width="1.2"/></g></g></g>`;
+    : '<path d="M-29 16Q-22 -2 -5 -6T21 -13Q14 5 -1 11T-29 16Z" fill="url(#ks-leaf)" stroke="#718568" stroke-width=".65"/><path d="M-28 16Q-13 6 19 -12M-19 11q1-4 4-9m4 4q2-5 6-8M2 0l7-7m-17 12q7 1 12-3" fill="none" stroke="#b3ba8b" opacity=".64" stroke-width=".65"/>';
+  return `<g transform="scale(${mirrored} 1)"><path d="M-41 54Q-34 32-27 17Q-9 6 1 -1" fill="none" stroke="#76896b" stroke-width="1.2"/>${leaf}</g>
+    <g class="ks-bug-travel"><g class="ks-beetle-breeze"><ellipse cx="1.5" cy="2.3" rx="${scale*8.9}" ry="${scale*6.5}" fill="#1d3127" opacity=".55"/><g transform="rotate(${angle}) scale(${scale})"><g stroke="#2a3027" stroke-width="1.13" fill="none"><path d="M-6 -3l-3 -3 -2 -.2m5 6l-4 1 -1.2 1m6 1.8l-2.5 3.7 -2 1M6 -3l3 -3 2 1M6 0l4 1 1 .8M5 4l2 3.4 2.2 1.1"/></g><ellipse cy="-6.4" rx="5.4" ry="5.3" fill="#252b25"/><path d="M-4.9 -7.3q0 -2.5 2.2 -2.4l.7 1.8zm9.7 0q0 -2.5 -2.1 -2.4l-.6 1.9z" fill="#d6c7a7"/><ellipse rx="7.6" ry="9.1" fill="url(#ks-bug-shell)" stroke="#493a2c" stroke-width=".58"/><path d="M0 -8.5Q1 0 .2 8.9" stroke="#533b2c" fill="none" stroke-width=".7"/><g fill="#342e28"><ellipse cy="-7.4" rx="1.8" ry="1.1"/><circle cx="-3.4" cy="-2.8" r="1.65"/><circle cx="3.1" cy="-2.4" r="1.7"/><circle cx="-3.2" cy="4" r="1.25"/><circle cx="3.6" cy="4.2" r="1.5"/></g><path d="M-5.6 -.9Q-6.3 -3.7 -3.6 -6" fill="none" stroke="#f9c3a1" opacity=".68" stroke-width=".92"/></g></g></g>`;
 }
 
 function constellation() {
@@ -216,6 +218,11 @@ export function mountDiscoveries(host, { onNext, config, onSound, foundNotes: fo
   let selected = '';
   let width = 0;
   let height = 0;
+  let prints=[];
+  const clearPrints=()=>{
+    prints.forEach(url=>URL.revokeObjectURL(url));
+    prints=[];
+  };
   const draw = () => {
     const w = Math.round(bed.clientWidth);
     const h = Math.round(bed.clientHeight);
@@ -227,19 +234,40 @@ export function mountDiscoveries(host, { onNext, config, onSound, foundNotes: fo
     // a fingertip-sized target even on the smallest portrait viewport.
     const size = Math.min(1.49, Math.max(.88, Math.min(width / 540,height / 315)));
     const plant = Math.min(.9, (height * .36) / (160 * size));
-    const {background,fruit}=strawberryBackdrop(width,height);
+    const {background,layers,patch}=strawberryBackdrop(width,height);
+    // The still plants share three prints. Moving a ladybug or flower then
+    // repaints only its own mark and the cached images below it.
+    clearPrints();
+    const defs=botanicalDefs('ks-bot')+strawberryGardenDefs();
+    const bands=[{y:-1,art:background},{y:height*.67,art:''},{y:height*.91,art:''}];
+    layers.push({y:height*.92,art:patch.plants});
+    for(const layer of layers.sort((a,b)=>a.y-b.y)){
+      const band=layer.y<height*.63?0:layer.y<height*.86?1:2;
+      bands[band].art+=layer.art;
+    }
+    const bedLayers=bands.map(({y,art})=>{
+      const svg=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${defs}${art}</svg>`;
+      const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+      prints.push(url);
+      return {y,art:`<image href="${url}" xlink:href="${url}" width="${width}" height="${height}" aria-hidden="true" pointer-events="none"/>`};
+    });
+    bedLayers.push({y:height*.92,art:`<g aria-hidden="true">${patch.berries}</g>`});
+    const controls=[];
     const objects = finds.map(find=>{
       const {key,label,x,y}=find;
       const px=25+(width-50)*x,py=24+(height-68)*y;
-      return `
-      <g class="ks-object${found.has(key)?' ks-found':''}${selected === key?' ks-selected':''}" transform="translate(${px.toFixed(1)} ${py.toFixed(1)})" data-key="${key}" role="button" tabindex="0" focusable="true" aria-label="${label}${found.has(key)?', note found':''}">
-        <g transform="scale(${size})"><g class="ks-icon">${objectArt(find,plant)}</g></g>
+      const root=key.startsWith('bug')?53:{lily:plant*160,daisy:plant*160,lavender:plant*160,blush:plant*160,fern:plant*93,chain:55,strawberry:64,gift:25}[key]||0;
+      const transform=`translate(${px.toFixed(1)} ${py.toFixed(1)})`;
+      const state=(found.has(key)?' ks-found':'')+(selected===key?' ks-selected':'');
+      controls.push(`<g class="ks-object${state}" transform="${transform}" data-key="${key}" role="button" tabindex="0" focusable="true" aria-label="${label}${found.has(key)?', note found':''}">
         <path class="ks-found-glint" d="M16 8Q16.5 11 19 12Q16.5 12.6 16 16Q15.4 12.8 13 12Q15.3 11 16 8Z" aria-hidden="true"/>
         <circle class="ks-focus-ring" r="23"/>
         <rect x="-23" y="-23" width="46" height="46" fill="transparent"/>
-      </g>`;
-    }).join('');
-    bed.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 ${width} ${height}" aria-label="A strawberry garden with ${finds.length} hidden birthday notes" role="group">${stageDefs()}${strawberryGardenDefs()}<g aria-hidden="true" pointer-events="none">${background}</g><g aria-hidden="true">${fruit}</g>${objects}<rect x="0" y="${height-23}" width="${width}" height="24" fill="url(#ks-footer-shade)" pointer-events="none"/></svg>`;
+      </g>`);
+      return {y:py+root*size,art:`<g class="ks-specimen${state}" data-specimen="${key}" transform="${transform} scale(${size})" aria-hidden="true"><g class="ks-icon"><g class="ks-stem-breeze">${objectArt(find,plant)}</g></g></g>`};
+    });
+    const planted=bedLayers.concat(objects).sort((a,b)=>a.y-b.y).map(layer=>layer.art).join('');
+    bed.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" viewBox="0 0 ${width} ${height}" aria-label="A strawberry garden with ${finds.length} hidden birthday notes" role="group">${stageDefs()}${strawberryGardenDefs(false)}${planted}<rect x="0" y="${height-29}" width="${width}" height="30" fill="url(#ks-footer-shade)" pointer-events="none"/>${controls.join('')}</svg>`;
     if (focused) bed.querySelector(`[data-key="${focused}"]`)?.focus({ preventScroll:true });
   };
   const discover = group => {
@@ -249,12 +277,14 @@ export function mountDiscoveries(host, { onNext, config, onSound, foundNotes: fo
     onSound?.(key.startsWith('bug')?'bug':key);
     found.add(key);
     selected = key;
-    bed.querySelector('.ks-selected')?.classList.remove('ks-selected');
+    bed.querySelectorAll('.ks-selected').forEach(el=>el.classList.remove('ks-selected'));
     group.classList.add('ks-found','ks-selected');
+    const specimen=bed.querySelector(`[data-specimen="${key}"]`);
+    specimen.classList.add('ks-found','ks-selected');
     group.setAttribute('aria-label', `${finds[index].label}, note found`);
-    animateFind(key,group,reducedMotion());
+    animateFind(key,specimen,reducedMotion());
     if (key === 'stars' && !reducedMotion()) {
-      const stars = group.querySelector('.ks-constellation');
+      const stars = specimen.querySelector('.ks-constellation');
       if (stars.animate) {
         stars.getAnimations().forEach(animation => animation.cancel());
         stars.animate([{strokeDashoffset:'1'},{strokeDashoffset:'0'}],{duration:800,easing:'ease-out'});
@@ -268,7 +298,9 @@ export function mountDiscoveries(host, { onNext, config, onSound, foundNotes: fo
   };
   bed.onclick = event => {
     const group = event.target.closest('.ks-object');
+    const specimen=event.target.closest('[data-specimen]');
     if(group) discover(group);
+    else if(specimen) discover(bed.querySelector(`[data-key="${specimen.dataset.specimen}"]`));
     else if(event.target.closest('[data-fruit]')) discover(bed.querySelector('[data-key="strawberry"]'));
   };
   bed.onkeydown = event => {
@@ -285,5 +317,6 @@ export function mountDiscoveries(host, { onNext, config, onSound, foundNotes: fo
     observer?.disconnect();
     window.removeEventListener('resize',draw);
     scene.remove();
+    clearPrints();
   };
 }

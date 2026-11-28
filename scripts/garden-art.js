@@ -26,7 +26,7 @@ function grasses(rng, count, center, baseline, spread, tall, dark) {
   for(let i=0;i<count;i++) {
     const x=center+(rng()-.5)*spread, y=baseline+rng()*36;
     const height=tall*(.18+.82*rng()), bend=(rng()-.48)*height*1.12;
-    const tipX=x+bend, tipY=y-height, w=1.6+rng()*3.9;
+    const tipX=x+bend, tipY=y-height, w=.72+rng()*1.72;
     blades+=`M${xy(x-w,y)}Q${xy(x+bend*.17,y-height*.68)} ${xy(tipX,tipY)}Q${xy(x+bend*.14+w,y-height*.59)} ${xy(x+w,y)}Z`;
     ridges+=`M${xy(x,y)}Q${xy(x+bend*.12,y-height*.57)} ${xy(tipX,tipY)}`;
   }
@@ -65,6 +65,12 @@ function bank(side) {
     return items.map(([type,x,y,angle,scale,n=0])=>group(specimen(type,n),x,y,angle,scale)).join('');
   }
   const left=side==='left';
+  const flowerTips=[];
+  function growingTip(type,n,x,y,angle,sx,sy) {
+    flowerTips.push({type,n,x,y,angle,sx,sy});
+    const isDaisy=type==='daisy';
+    return group(head(isDaisy?'daisy-bud':'bud',n),x,y,angle,sx*(isDaisy?.94:.62),sy*(isDaisy?.94:.67));
+  }
   let art=grasses(rng,43,83,574,344,257,true);
   art+='<g opacity=".54">'+forms([
     ['fern',-10,512,9,2.35],['foliage',45,541,-13,1.98,1],['fern',40,550,38,1.59,1],
@@ -95,15 +101,15 @@ function bank(side) {
   if(left) {
     art+='<g opacity=".80">'+stalk('M5 471C18 392 21 343 35 286Q49 225 82 174M40 270Q55 235 87 219',1.45)+group(head('bud',2),82,174,29,.48)+group(head('bud'),87,219,54,.39)+'</g>';
     art+=stalk('M47 568C54 492 100 402 115 347C128 295 126 265 115 236M80 444C109 388 152 377 174 334M105 383Q93 339 66 318');
-    art+=group(head('daisy',2),115,234,-17,.93,.76)+group(head('daisy',1),174,332,17,.62,.46)+group(head('bud'),66,317,-48,.53);
+    art+=growingTip('daisy',2,115,234,-17,.93,.84)+growingTip('daisy',1,174,332,17,.62,.50)+group(head('daisy-bud'),66,317,-48,.68);
     art+=stalk('M140 574C145 511 206 467 229 421',1.75);
-    art+=group(head('daisy'),229,419,33,.65,.55);
+    art+=growingTip('daisy',0,229,419,33,.65,.62);
   } else {
     art+='<g opacity=".77">'+stalk('M7 473C21 392 11 311 30 242Q42 193 73 166M38 216Q50 196 68 191',1.45)+group(head('bud'),73,166,37,.49)+group(head('bud',1),68,191,66,.36)+'</g>';
     art+=stalk('M38 569C55 484 109 378 106 303Q106 260 96 233M83 399Q102 335 153 305M102 334Q82 295 53 280',2.85);
-    art+=group(head('white-lily',2),96,232,-28,1.02,.83)+group(head('bud',1),153,305,49,.71)+group(head('bud'),53,281,-48,.56);
+    art+=growingTip('white-lily',2,96,232,-28,1.02,.89)+group(head('bud',1),153,305,49,.71)+group(head('bud'),53,281,-48,.56);
     art+=stalk('M125 572C144 507 191 469 212 412M176 467Q198 440 244 438',1.75);
-    art+=group(head('daisy',1),212,411,-4,.59,.47)+group(head('daisy'),244,437,35,.38,.27);
+    art+=growingTip('daisy',1,212,411,-4,.59,.50)+growingTip('daisy',0,244,437,35,.38,.31);
   }
   art+=forms([
     ['foliage',-13,531,28,1.32,1],['fern',-7,552,12,1.35],
@@ -113,7 +119,11 @@ function bank(side) {
   art+=grasses(rng,42,111,580,310,132,false);
   art+=forms([['fern',-8,577,58,1.06,1],['foliage',17,579,64,1.0],['foliage',80,590,70,.9,1]]);
   const defs=Array.from(symbols,([id,geometry])=>`<g id="${id}">${geometry}</g>`).join('');
-  return botanicalDefs(p)+'<defs>'+defs+'</defs>'+art;
+  const palette=botanicalDefs(p,!left);
+  return { print:palette+'<defs>'+defs+'</defs>'+art, blooms() {
+    return palette+flowerTips.map(({type,n,x,y,angle,sx,sy})=>
+      group(flowerHead(type,{seed:93+n*73,prefix:p}),x,y,angle,sx,sy)).join('');
+  } };
 }
 
 // A sparse overhanging branch brackets the sky. It is deliberately a different
@@ -162,8 +172,8 @@ function bloomOverlay(side) {
     ['pink-lily',83,579,30,1.41,99],['daisy',67,578,47,1.24,72],['white-lily',191,576,48,.81,244]
   ];
   const flowers=stems.map(([type,x,y,angle,scale,seed],i)=>
-    `<g style="--plant-delay:${i*305}ms">${group(sprig(type,{seed,prefix:p,grow:true}),x,y,angle,scale)}</g>`).join('');
-  return liveSvg('0 0 480 568',botanicalDefs(p)+flowers,'g-growing');
+    group(`<g class="g-sway" style="--plant-delay:${i*305}ms;--gust-time:${13+i*2.7+(left?0:1.2)}s;--gust-offset:${-i*2.9+(left?0:-3)}s">${sprig(type,{seed,prefix:p,grow:true})}</g>`,x,y,angle,scale)).join('');
+  return liveSvg('0 0 480 568',botanicalDefs(p,!left)+flowers,'g-growing');
 }
 
 function wreath(width, height) {
@@ -172,14 +182,20 @@ function wreath(width, height) {
     `<g id="w${i}">${type.includes('lily')||type==='daisy'?flowerHead(type,{prefix:p,seed:416+i}):sprig(type,{prefix:p,seed:18+i})}</g>`).join('');
   const unit=Math.min(1, width/650,height/420);
   const rx=width*.5-27*unit,ry=height*.5-40*unit;
-  let curves='',sprays='',flowers='';
+  let curves='',bindings='',sprays='',flowers='';
   for(const sign of [-1,1]) {
     const rng=seeded(sign<0?411:502);
     const arc=v=>Math.sign(v)*Math.pow(Math.abs(v),.79);
-    const pos=a=>[width*.5+sign*rx*arc(Math.cos(a)),height*.5+ry*arc(Math.sin(a))];
+    const pos=a=>{
+      const irregular=(2.8*Math.sin(a*5+.6*sign)+2.3*Math.cos(a*9+.9*sign))*unit*Math.cos(a);
+      return [width*.5+sign*(rx+irregular)*arc(Math.cos(a)),height*.5+(ry+irregular)*arc(Math.sin(a))];
+    };
     for(let k=0;k<=60;k++) {
       const a=Math.PI*.50-k*Math.PI/60;
-      curves+=(k===0?'M':'L')+xy(...pos(a));
+      const [x,y]=pos(a);
+      curves+=(k===0?'M':'L')+xy(x,y);
+      const turn=Math.sin(k*.57+sign)*2.45*unit;
+      bindings+=(k===0?'M':'L')+xy(x+turn*Math.cos(a)*sign,y+turn*Math.sin(a));
     }
     const count=Math.round((width+height)/(49*unit));
     for(let i=0;i<count;i++) {
@@ -189,13 +205,18 @@ function wreath(width, height) {
       const id=i%7===0?6:i%5===2?5:i%4===1?1:i%9===3?7:0;
       sprays+=group(use('w'+id),x,y,tangent+flourish,unit*(.18+rng()*.12));
     }
-    for(const [angle,id,sc] of [[1.32,2,.48],[1.12,4,.53],[.85,3,.38],[.66,4,.24],[-.20,4,.27],[-.69,4,.29],[-1.02,2,.4],[-1.26,4,.4],[-1.43,3,.24]]) {
+    const posies=sign<0?[[1.39,2,.48],[1.22,4,.53],[1.08,3,.38],[.73,4,.24],[-.24,4,.26],[-.77,4,.30],[-.94,2,.42],[-1.24,4,.36],[-1.4,3,.24]]
+      :[[1.41,4,.39],[1.25,3,.51],[1.10,4,.47],[.91,2,.36],[.40,4,.20],[-.17,3,.24],[-.63,4,.3],[-.91,2,.4],[-1.19,4,.31]];
+    for(const [angle,id,sc] of posies) {
       const a=angle+(rng()-.5)*.09;
       const [x,y]=pos(a);
-      flowers+=group(use('w'+id),x,y,sign*a*84,sc*unit,sc*unit*.9);
+      const reach=(3+rng()*6)*unit;
+      const tx=x+sign*reach*Math.cos(a),ty=y+reach*Math.sin(a);
+      sprays+=`<path d="M${xy(x,y)}Q${xy((x+tx)*.5,ty+2*unit)} ${xy(tx,ty)}" fill="none" stroke="#899578" stroke-width="${round(unit)}"/>`;
+      flowers+=group(use('w'+id),tx,ty,sign*(a*48+(rng()-.5)*28),sc*unit,sc*unit*(.8+rng()*.2));
     }
   }
-  return botanicalDefs(p)+'<defs>'+defs+'</defs><path d="'+curves+'" fill="none" stroke="#959e77" stroke-width="'+round(unit*1.53)+'"/>'+sprays+flowers;
+  return botanicalDefs(p)+'<defs>'+defs+'</defs><path d="'+curves+'" fill="none" stroke="#829172" stroke-width="'+round(unit*1.73)+'"/><path d="'+bindings+'" fill="none" stroke="#a4a481" stroke-width="'+round(unit*.77)+'"/>'+sprays+flowers;
 }
 
 export function mountGarden(host) {
@@ -212,9 +233,13 @@ export function mountGarden(host) {
   for(const side of ['left','right']) {
     const edge=document.createElement('div');
     edge.className='g-bank g-'+side;
-    insertImage(edge,bank(side),'0 0 480 568','g-print');
+    const bed=bank(side);
+    const back=document.createElement('div');
+    back.className='g-back-bank';
+    edge.appendChild(back);
+    insertImage(back,bed.print,'0 0 480 568','g-print');
     host.appendChild(edge);
-    sides.push({side,edge,live:null});
+    sides.push({side,edge,back,blooms:bed.blooms,live:null});
     insertImage(host,canopy(side==='right'),'0 0 200 176','g-canopy g-canopy-'+side,'xMinYMin meet');
   }
   function sizeWreath() {
@@ -246,8 +271,9 @@ export function mountGarden(host) {
       hero=liveSvg('-67 -217 134 219',botanicalDefs(p)+sprig('daisy',{seed:93,prefix:p,grow:true}),'g-hero');
       host.appendChild(hero);
     }
-    if(index>=2) {
+    if(index===2 || index===3 || index===7) {
       for(const entry of sides) if(!entry.live) {
+        insertImage(entry.back,entry.blooms(),'0 0 480 568','g-open-bank');
         entry.live = bloomOverlay(entry.side);
         entry.edge.appendChild(entry.live);
       }

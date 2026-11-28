@@ -1,7 +1,5 @@
 export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-export const lerp = (a, b, t) => a + (b - a) * t;
 export const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-export const smooth = t => t * t * (3 - 2 * t);
 export const oscillate = (t, phase) => Math.sin(t + phase) + 0.38 * Math.sin(1.72 * t - phase);
 // Closed-form critically damped spring. It settles without overshooting or
 // depending on how frequently pointer events arrive.
@@ -13,7 +11,7 @@ export function settle(state, target, seconds) {
 }
 export function flowerArc(t, dx, dy, lift) {
   const arc=Math.sin(Math.PI*t);
-  return { x:dx*t, y:dy*t-arc*lift, angle:(dx>0?-1:1)*arc*19, scale:lerp(.62,1.04,smooth(t)) };
+  return { x:dx*t, y:dy*t-arc*lift, angle:(dx>0?-1:1)*arc*19 };
 }
 export function random(seed) {
   return () => {

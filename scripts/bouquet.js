@@ -1,5 +1,5 @@
 import { botanicalDefs, sprig } from './botany.js';
-import { flowerArc } from './motion.js';
+import { flowerArc, random } from './motion.js';
 import { cutFlowers, floristDefs, flowerId, useArt } from './florist-art.js';
 import { wrapChoices, defaultWrap, makeWrap, swatch } from './bouquet-wrap.js';
 
@@ -33,6 +33,8 @@ function paper(prefix) {
   const corner = '<path d="M0 23V0h23M2.8 13V2.8h10.2M0 6.5c6.5 0 6.5-3.3 8.9-3.3-1 1.9-1.8 5.5-5.8 5.9C4 6.9 6.6 4.3 8.9 3.2"/>';
   return `<defs>
     <linearGradient id="${prefix}-paper" x2="1" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#f4ebd2"/><stop offset=".54" stop-color="#e5d8b6"/><stop offset="1" stop-color="#f0e6cc"/></linearGradient>
+    <radialGradient id="${prefix}-contact"><stop stop-color="#424a31" stop-opacity=".24"/><stop offset=".64" stop-color="#59573c" stop-opacity=".12"/><stop offset="1" stop-color="#6e694e" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${prefix}-leaf" x1="0" y1="0" x2=".92" y2=".7"><stop stop-color="#9da885"/><stop offset=".45" stop-color="#819171"/><stop offset=".52" stop-color="#5a745f"/><stop offset="1" stop-color="#72876e"/></linearGradient>
     <pattern id="${prefix}-grain" width="42" height="42" patternUnits="userSpaceOnUse"><g fill="none" stroke="#6c6444" stroke-width=".63" opacity=".19">${grain}</g></pattern>
     <clipPath id="${prefix}-tucked"><path d="M0 0H320V175H232L186 299 157 313 89 179H0Z"/></clipPath>
   </defs><rect width="320" height="350" fill="url(#${prefix}-paper)"/><rect width="320" height="350" fill="url(#${prefix}-grain)"/>
@@ -95,35 +97,46 @@ function arrangement() {
     for(let i=0;i<count;i++){
       const stem=ordered[placements.length],across=count===1?0:2*i/(count-1)-1;
       const wobble=Math.sin(stem.id*3.91+variant*.75);
-      const x=160+spread*across+wobble*2.3;
-      const y=(n===1?116:103-32*fullness)+depth*(37+70*fullness)+across*across*(13-7*fullness)+Math.cos(stem.id*1.91+variant)*3;
+      const lean=Math.sin(stem.seed*.29);
+      const x=160+spread*across+wobble*(2.3+3*fullness)+Math.sin(2.7*depth)*3;
+      const y=(n===1?116:103-32*fullness)+depth*(37+70*fullness)+across*across*(13-7*fullness)+Math.cos(stem.id*1.91+variant)*(4+2*fullness);
       const angle=Math.atan2(x-165,258-y),length=Math.hypot(x-165,258-y)/124;
       const width=(.96-fullness*.38)*(depth*.15+.87);
       const a=width*Math.cos(angle),b=width*Math.sin(angle),c=-length*Math.sin(angle),d=length*Math.cos(angle);
       const stemMatrix=[a,b,c,d,165+c*36,258+d*36];
-      const tilt=angle*.49+wobble*.27;
+      const tilt=angle*.68+wobble*.34;
       const size=(.9-.34*Math.sqrt(fullness))*(.94+.11*depth)*(1+wobble*.052);
       const dx=size*Math.cos(tilt),dy=size*Math.sin(tilt);
-      const headMatrix=[dx,dy,-dy,dx,x,y];
+      const face=.84+.09*lean+.07*depth;
+      const headMatrix=[dx,dy,-dy*face,dx*face,x,y];
       const matrix=data=>'matrix('+data.map(v=>v.toFixed(4)).join(',')+')';
-      placements.push({stem,x,y,stemMatrix:matrix(stemMatrix),headMatrix:matrix(headMatrix)});
+      placements.push({stem,x,y,tilt,size,stemMatrix:matrix(stemMatrix),headMatrix:matrix(headMatrix)});
     }
   }
   return placements;
 }
 
-function cutStem(type, seed) {
-  const bend=Math.sin(seed)*8;
-  const shaft='M0 0Q'+bend.toFixed(2)+' -84 0 -160';
+function cutStem(type, seed, prefix) {
+  const rng=random(seed*73), bend=(rng()-.5)*24;
+  const shaft='M0 0Q'+bend.toFixed(2)+' -80 0 -160';
   const sparse=['breath','lavender','sweet-pea'].includes(type);
   const slender=['white-lily','pink-lily','tulip','cosmos','lavender','cornflower'].includes(type);
   const leaves=[];
   for(let i=0;i<(sparse?2:4);i++){
-    const y=-39-i*22,side=i%2===0?-1:1;
-    const x=(bend*.45).toFixed(1),length=slender?40:30,w=slender?4:8;
-    leaves.push(`<g transform="translate(${x} ${y}) scale(${side} 1) rotate(25)"><path d="M0 0Q${-w} -12 1 -${length}Q${w+4} -14 0 0Z" fill="${i%2?'#85947b':'#6e826d'}" stroke="#596f60" stroke-width=".64"/><path d="M0 -1Q3 -17 1 -${length-2}" fill="none" stroke="#b2bb99" stroke-width=".6"/></g>`);
+    const t=.23+i*.144+rng()*.07, side=i%2===0?-1:1;
+    const x=2*t*(1-t)*bend, length=(slender?33:24)+rng()*12, width=(slender?3.4:6)*(.72+.55*rng());
+    const curl=(rng()-.35)*10, angle=17+26*rng();
+    const tip=`${curl.toFixed(2)} ${(-length).toFixed(2)}`;
+    leaves.push(`<g transform="translate(${x.toFixed(2)} ${(-160*t).toFixed(2)}) scale(${side} 1) rotate(${angle.toFixed(2)})"><path d="M0 0Q.3 -3 0 -6" fill="none" stroke="#7f8867" stroke-width="1.1"/><path d="M0 -4C${-width} -12 ${-width-1} ${-length*.78} ${tip}Q${width+8} ${-length*.52} 0 -4Z" fill="url(#${prefix}-leaf)" stroke="#526b59" stroke-width=".52"/><path d="M0 -4Q${1+curl*.3} ${-length*.52} ${tip}m${-curl*.59} ${length*.52}l${-width*.63} -5m${width} 1.8l${width*.68} -4.7" fill="none" stroke="#c3c6a3" opacity=".65" stroke-width=".46"/></g>`);
   }
-  return `<path d="${shaft}" fill="none" stroke="#536f5e" stroke-width="1.85"/><path d="${shaft}" fill="none" stroke="#a8b28b" stroke-width=".62"/>${leaves.join('')}`;
+  // Upper leaflets on the leafy cuts peek through the crown of a full bunch.
+  if(['rose','peony','sweet-pea','cosmos'].includes(type)){
+    const t=.75+rng()*.07, side=rng()<.5?-1:1, angle=27+rng()*25;
+    const shape=type==='cosmos'?'M0 0Q-3 -6 0 -14Q2 -6 0 0Z':'M0 0Q-6 -5 -1 -13L1 -16Q5 -7 0 0Z';
+    const leaf=(x,y,a,scale)=>`<g transform="translate(${x} ${y}) rotate(${a}) scale(${scale})"><path d="${shape}" fill="url(#${prefix}-leaf)" stroke="#6c7c60" stroke-width=".55"/><path d="M0 -.6Q.6 -7 .45 -12" fill="none" stroke="#c0bd94" stroke-width=".57"/></g>`;
+    leaves.push(`<g transform="translate(${2*t*(1-t)*bend} ${-160*t}) scale(${side} 1) rotate(${angle})"><path d="M0 0Q5 -17 3 -38" fill="none" stroke="#788260" stroke-width=".95"/>${leaf(2,-11,-47,1.1)}${leaf(3.5,-18,53,.99)}${leaf(3.6,-26,-39,.82)}${leaf(3,-35,9,.8)}</g>`);
+  }
+  return `<path d="${shaft}" fill="none" stroke="#506956" stroke-width="2.1" stroke-linecap="round"/><path d="${shaft}" transform="translate(-.32 0)" fill="none" stroke="#a8ae80" stroke-width=".64"/>${leaves.join('')}<path d="M0 -154q-3-3-5-8l4 3 1-6 2 5 4-3q-2 6-6 9Z" fill="#708467"/>`;
 }
 
 function trimControls() {
@@ -177,7 +190,7 @@ export function mountBouquet(host, { onNext, onSound = () => {}, config = {} } =
     target.x = placed.x; target.y = placed.y;
     const end = target.matrixTransform(svgMatrix);
     const startX = origin.left + origin.width * .5;
-    const startY = origin.top + origin.height * .25;
+    const startY = origin.top + origin.height * .56;
     const dx = end.x - startX, dy = end.y - startY;
     const float = document.createElementNS(SVG_NS, 'svg');
     float.setAttribute('viewBox', '-52 -56 104 112');
@@ -191,21 +204,25 @@ export function mountBouquet(host, { onNext, onSound = () => {}, config = {} } =
     float.append(instance);
     document.body.append(float);
     flyers.add(float);
+    const endScale=placed.size*Math.hypot(svgMatrix.a,svgMatrix.b)*112/58;
+    const startScale=Math.min(origin.width/104,origin.height/92)*112/58;
     const keys = [0,.25,.55,.8,1].map(t => {
-      const pose=flowerArc(t,dx,dy,46);
-      return {offset:t, transform:`translate(${pose.x}px, ${pose.y}px) rotate(${pose.angle}deg) scale(${pose.scale})`, opacity:t===1?0:.96};
+      const pose=flowerArc(t,dx,dy,Math.min(50,12+.12*Math.hypot(dx,dy)));
+      const scale=startScale+(endScale-startScale)*t;
+      return {offset:t, transform:`translate(${pose.x}px, ${pose.y}px) rotate(${pose.angle*.55+placed.tilt*57.3*t}deg) scale(${scale})`, opacity:t===1?0:.96};
     });
     const flight = float.animate(keys,{duration: 570,easing:'cubic-bezier(.22,.6,.33,1)',fill:'forwards'});
     const land = () => { float.remove(); flyers.delete(float); };
     flight.onfinish = land;
     flight.oncancel = land;
-    return 315;
+    return 420;
   }
 
   function position(node, matrix, animate) {
-    const before=node.getAttribute('transform');
+    let before=node.getAttribute('transform');
     if(before===matrix) return;
     const running=movements.get(node);
+    if(running && animate)before=getComputedStyle(node).transform;
     running?.cancel();
     movements.delete(node);
     node.setAttribute('transform',matrix);
@@ -232,7 +249,10 @@ export function mountBouquet(host, { onNext, onSound = () => {}, config = {} } =
       let item=nodes.get(stem.id);
       if(!item) {
         const cut=document.createElementNS(SVG_NS,'g'),head=document.createElementNS(SVG_NS,'g');
-        cut.innerHTML=cutStem(stem.type,stem.seed);head.innerHTML=useArt(flowerId(prefix,stem.type,stem.id%2));
+        cut.innerHTML=cutStem(stem.type,stem.seed,prefix);
+        const airy=['breath','lavender','sweet-pea'].includes(stem.type);
+        const shadow=airy?'':`<ellipse cx="2.5" cy="6" rx="38" ry="29" fill="url(#${prefix}-contact)"/>`;
+        head.innerHTML=shadow+useArt(flowerId(prefix,stem.type,stem.id%2));
         cut.dataset.stemId=String(stem.id);head.dataset.stemId=String(stem.id);
         item={cut,head};nodes.set(stem.id,item);
       }
@@ -357,6 +377,12 @@ export function mountBouquet(host, { onNext, onSound = () => {}, config = {} } =
       if(bouquet.wrapped && option && wrapChoices[kind][option]){
         if(bouquet.wrap[kind]!==option){
           bouquet.wrap[kind]=option; drawWrap(); onSound(kind);
+          if(kind==='ribbon' && !reduced.matches){
+            wrapSlot.querySelector('.bq-bow')?.animate?.(
+              [{transform:'rotate(-3deg) scale(.97)'},{transform:'rotate(.9deg)'},{transform:'rotate(0)'}],
+              {duration:440,easing:'ease-out'}
+            );
+          }
           speak(wrapChoices[kind][option].name+' selected.');
         }
         return;

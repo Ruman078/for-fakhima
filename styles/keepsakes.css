@@ -211,6 +211,17 @@
   42% { opacity:1; }
   100% { transform:perspective(800px) translateY(0) rotateX(0) scale(1); opacity:1; }
 }
+.ks-refolding .ks-paper { animation:ks-tuck-paper .44s ease-in both; }
+.ks-refolding .ks-envelope { animation:ks-return-envelope .57s cubic-bezier(.22,.62,.3,1) both; }
+@keyframes ks-tuck-paper {
+  0% { visibility:visible; opacity:1; transform:perspective(800px) rotateX(0); }
+  65% { opacity:.8; }
+  100% { visibility:hidden; opacity:0; transform:perspective(800px) translateY(8%) rotateX(41deg) scale(.78,.59); }
+}
+@keyframes ks-return-envelope {
+  0%,34% { opacity:0; transform:translateY(13%) rotate(-1deg); }
+  100% { opacity:1; transform:rotate(-4deg); }
+}
 .ks-letter-actions, .ks-discovery-actions {
   display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
   gap: 2px clamp(12px,3vw,30px);
@@ -241,16 +252,24 @@
 .ks-side-fruit { cursor:pointer; touch-action:manipulation; }
 .ks-garden-foot { width:100%; padding:0 12px 9px; background:linear-gradient(#19342c,#142c27); }
 .ks-beetle-breeze { transform-box:fill-box; transform-origin:center; }
-.ks-object[data-key="bug"] .ks-beetle-breeze { animation:ks-creep 9s -2s ease-in-out infinite alternate; }
-.ks-object[data-key="bug-berry"] .ks-beetle-breeze { animation:ks-creep 11s -7s ease-in-out infinite alternate-reverse; }
-.ks-object[data-key="bug-path"] .ks-beetle-breeze { animation:ks-creep 14s -3s ease-in-out infinite alternate; }
-.ks-object[data-key="bug-clover"] .ks-beetle-breeze { animation:ks-creep 12s -5s ease-in-out infinite alternate-reverse; }
+[data-specimen="bug"] .ks-beetle-breeze { animation:ks-creep 9s -2s ease-in-out infinite alternate; }
+[data-specimen="bug-berry"] .ks-beetle-breeze { animation:ks-creep 11s -7s ease-in-out infinite alternate-reverse; }
+[data-specimen="bug-path"] .ks-beetle-breeze { animation:ks-creep 14s -3s ease-in-out infinite alternate; }
+[data-specimen="bug-clover"] .ks-beetle-breeze { animation:ks-creep 12s -5s ease-in-out infinite alternate-reverse; }
 @keyframes ks-creep { 0%,26% { transform:translate(-1px,.5px) rotate(-9deg); } 57%,100% { transform:translate(3px,-1.8px) rotate(7deg); } }
 .ks-object { cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color: transparent; outline:none; }
 .ks-icon, .ks-flight, .ks-bug-travel, .ks-garland, .ks-lid, .ks-live-flower, .ks-open-lily, .ks-closed-bud {
   transform-box:fill-box; transform-origin:center;
 }
 .ks-live-flower { transform-origin:50% 98%; }
+:is([data-specimen="lily"],[data-specimen="daisy"],[data-specimen="lavender"],[data-specimen="blush"],[data-specimen="strawberry"]) .ks-stem-breeze {
+  transform-box:fill-box; transform-origin:50% 100%;
+  animation:ks-stem-sway 9.8s -3s ease-in-out infinite;
+}
+[data-specimen="lavender"] .ks-stem-breeze { animation-delay:-1.6s; animation-duration:10.3s; }
+[data-specimen="blush"] .ks-stem-breeze { animation-delay:-1.3s; animation-duration:10s; }
+[data-specimen="strawberry"] .ks-stem-breeze { animation-delay:-2.3s; animation-duration:10.4s; }
+@keyframes ks-stem-sway { 0%,100% { transform:rotate(-.45deg); } 38% { transform:rotate(.83deg); } 67% { transform:rotate(.2deg); } }
 .ks-focus-ring { fill:none; stroke:#f2dba4; stroke-width:1.25; stroke-dasharray:2 4; opacity:0; pointer-events:none; }
 .ks-found-glint { fill:#e9cd91; opacity:0; transition:opacity .6s; pointer-events:none; }
 .ks-found .ks-found-glint { opacity:.85; }
@@ -263,6 +282,8 @@
 .ks-constellation { fill:none; stroke:#ddcda8; stroke-width:.95; stroke-dasharray:1; stroke-dashoffset:1; }
 .ks-found .ks-constellation { stroke-dashoffset:0; }
 .ks-wing-left,.ks-wing-right { transform-box:fill-box; transform-origin:100% 50%; }
+.ks-wing-left,.ks-wing-right { animation:ks-wings-at-rest 7.1s -3.7s ease-in-out infinite; }
+@keyframes ks-wings-at-rest { 0%,56%,78%,100% { transform:scaleX(1); } 64% { transform:scaleX(.71); } 72% { transform:scaleX(.9); } }
 .ks-selected .ks-wing-left, .ks-selected .ks-wing-right { animation:ks-wingbeat .3s 5 alternate ease-in-out; }
 .ks-selected .ks-wing-right { animation-delay:.06s; }
 .ks-pollen { opacity:0; pointer-events:none; }
@@ -270,8 +291,8 @@
 .ks-new-sprouts { transform:scaleY(.05); transform-origin:bottom; transform-box:fill-box; opacity:0; transition:transform .9s cubic-bezier(.2,.06,.3,1),opacity .35s; }
 .ks-found .ks-new-sprouts { transform:scaleY(1); opacity:1; }
 @media (hover:hover) {
-  .ks-object[data-key="butterfly"]:hover .ks-wing-left,
-  .ks-object[data-key="butterfly"]:hover .ks-wing-right { animation:ks-wingbeat .35s 5 alternate ease-in-out; }
+  [data-specimen="butterfly"]:hover :is(.ks-wing-left,.ks-wing-right),
+  .ks-bed:has([data-key="butterfly"]:hover) [data-specimen="butterfly"] :is(.ks-wing-left,.ks-wing-right) { animation:ks-wingbeat .35s 5 alternate ease-in-out; }
 }
 @keyframes ks-pollen-drift {
   0% { opacity:0; transform:translate(0,0); }

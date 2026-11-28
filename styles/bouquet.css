@@ -75,7 +75,8 @@
 .bq-folding .bq-wrap-left{animation:bqFoldLeft .7s cubic-bezier(.24,.72,.38,1) both}
 .bq-folding .bq-wrap-right{animation:bqFoldRight .74s .16s cubic-bezier(.24,.72,.38,1) both}
 .bq-folding .bq-ribbon{animation:bqShow .45s .51s both}
-.bq-folding .bq-bow{transform-origin:164px 264px;animation:bqTie .65s .6s cubic-bezier(.17,.81,.31,1) both}
+.bq-bow{transform-origin:164px 264px}
+.bq-folding .bq-bow{animation:bqTie .65s .6s cubic-bezier(.17,.81,.31,1) both}
 .bq-folding .bq-tag{transform-origin:165px 264px;animation:bqTag .66s .85s cubic-bezier(.17,.76,.31,1) both}
 @keyframes bqFoldLeft { from { transform: rotate(-25deg) scaleX(.5); opacity: 0; } to { transform: rotate(0) scaleX(1); opacity: 1; } }
 @keyframes bqFoldRight { from { transform: rotate(32deg) scaleX(.43); opacity: 0; } to { transform: rotate(0) scaleX(1); opacity: 1; } }

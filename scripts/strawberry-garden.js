@@ -7,17 +7,18 @@ const line = (d,ink,weight=1,opacity=1) => `<path d="${d}" fill="none" stroke="$
 
 // A strawberry leaf has three toothed leaflets. The vein forks meet its teeth.
 function leaflet() {
-  const side = (t,sign,depth=1) => pt(sign*10.5*Math.pow(Math.sin(Math.PI*t),.77)*depth+t*1.8,-32*t);
-  let outline='M0 0',veins='M0 0Q1 -14 1.8 -32';
+  const mid=t=>4*Math.sin(t*2.3)-t*1.5;
+  const side=(t,sign,depth=1)=>pt(mid(t)+sign*(sign>0?10.9:9.2)*Math.pow(Math.sin(Math.PI*t),.79)*(.78+.4*t)*depth,-32*t);
+  let outline='M0 0',veins='';
   for (const sign of [1,-1]) {
     for(let j=0;j<9;j++) {
       const t=sign===1?j:8-j;
       outline+='L'+side((t+(sign===1?.3:.85))/9,sign,.84)+'L'+side((t+(sign===1?.85:.3))/9,sign,1.05);
-      veins+=`M${pt(t*.18,-32*t/9)}Q${side((t+.37)/9,sign,.54)} ${side((t+.85)/9,sign,.97)}`;
+      if(t>0)veins+=`M${pt(mid(t/9),-32*(t-.6)/9)}Q${side((t+.10)/9,sign,.51)} ${side((t+.82)/9,sign,.95)}`;
     }
     if(sign===1)outline+='L1.8 -32';
   }
-  return `<g id="ks-leaflet"><path d="${outline}Z" fill="url(#ks-berry-leaf)" stroke="#263e32" stroke-width=".65"/>${line(veins,'#b5ba87',.44,.7)}</g>`;
+  return `<g id="ks-leaflet"><path d="${outline}Z" fill="url(#ks-berry-leaf)" stroke="#233c30" stroke-width=".48"/>${line(veins,'#a2ad7e',.43,.69)}${line('M0 0Q3.9 -15 1.5 -31','#c2bd8b',.64,.73)}</g>`;
 }
 
 function fruit() {
@@ -40,8 +41,8 @@ function strawberryBlossom(){
   return `<g id="ks-berry-flower">${Array.from({length:5},(_,i)=>`<path transform="rotate(${i*72})" d="M0 .3C-4.1 -1.5-5.5 -5.8-4 -7.7Q-2 -10.3 .2 -8.4Q3.4 -10.1 4 -7.4C5.2 -4.9 2.8 -1 .5 .2Z" fill="#f1e8c9" stroke="#bdb89d" stroke-width=".52"/>`).join('')}<circle r="2.6" fill="#d7ae5e"/><path d="m-.9 -.2 .6-.9m1.1 1 .3-.7" stroke="#92764a" stroke-width=".55"/></g>`;
 }
 
-export function strawberryGardenDefs() {
-  const botanical=['fern','foliage','lavender','breath','daisy','wildflower','bud','white-lily','pink-lily'];
+export function strawberryGardenDefs(includePlanting=true) {
+  const botanical=includePlanting?['fern','foliage','lavender','breath','daisy','wildflower','bud','white-lily','pink-lily']:[];
   const ink=seeded(1011);
   let pale='',dark='';
   for(let i=0;i<228;i++){
@@ -50,17 +51,20 @@ export function strawberryGardenDefs() {
     else pale+=`M${pt(x,y)}l${pt(span*.55,-span*.18)}`;
   }
   return `<defs>
-    <linearGradient id="ks-berry-leaf" x2="1" y2=".8"><stop stop-color="#375a49"/><stop offset=".45" stop-color="#829067"/><stop offset=".52" stop-color="#597956"/><stop offset="1" stop-color="#365c48"/></linearGradient>
+    <linearGradient id="ks-berry-leaf" x2="1" y2=".35"><stop stop-color="#365345"/><stop offset=".39" stop-color="#748767"/><stop offset=".54" stop-color="#506e51"/><stop offset=".83" stop-color="#44634a"/><stop offset="1" stop-color="#304d3c"/></linearGradient>
     <radialGradient id="ks-fruit" cx=".31" cy=".23" r=".91"><stop stop-color="#f3aa89"/><stop offset=".36" stop-color="#cd7764"/><stop offset=".72" stop-color="#ad554b"/><stop offset="1" stop-color="#803e3c"/></radialGradient>
     <linearGradient id="ks-unripe" x2="1" y2="1"><stop stop-color="#e7d7ad"/><stop offset=".48" stop-color="#c9c29b"/><stop offset="1" stop-color="#90a078"/></linearGradient>
-    <linearGradient id="ks-lawn" x2="0" y2="1"><stop stop-color="#69806b"/><stop offset=".22" stop-color="#526b52"/><stop offset=".6" stop-color="#394e3b"/><stop offset="1" stop-color="#1d382d"/></linearGradient>
-    <linearGradient id="ks-walk" x2=".2" y2="1"><stop stop-color="#8c8e71"/><stop offset=".5" stop-color="#928c72"/><stop offset="1" stop-color="#6c7059"/></linearGradient>
+    <linearGradient id="ks-lawn" x2=".04" y2="1"><stop stop-color="#536b58"/><stop offset=".17" stop-color="#495f4b"/><stop offset=".56" stop-color="#334c3c"/><stop offset="1" stop-color="#233d30"/></linearGradient>
+    <linearGradient id="ks-walk" x2=".12" y2="1"><stop stop-color="#7a806a"/><stop offset=".28" stop-color="#777964"/><stop offset=".72" stop-color="#6e6e55"/><stop offset="1" stop-color="#494f3c"/></linearGradient>
+    <radialGradient id="ks-horizon-light" cx=".48" cy=".71" r=".51"><stop stop-color="#e2c293" stop-opacity=".30"/><stop offset=".47" stop-color="#bda681" stop-opacity=".16"/><stop offset="1" stop-color="#b09a79" stop-opacity="0"/></radialGradient>
     <radialGradient id="ks-ground-moss"><stop stop-color="#152e27" stop-opacity=".53"/><stop offset="1" stop-color="#263d2f" stop-opacity="0"/></radialGradient>
+    <radialGradient id="ks-meadow-brush" cx=".36" cy=".42" r=".63"><stop stop-color="#7d8966" stop-opacity=".42"/><stop offset=".47" stop-color="#687e5a" stop-opacity=".27"/><stop offset="1" stop-color="#647b59" stop-opacity="0"/></radialGradient>
     <pattern id="ks-garden-ink" width="76" height="76" patternUnits="userSpaceOnUse">${line(dark,'#20362d',.58,.38)}${line(pale,'#ded5a9',.59,.56)}</pattern>
     <linearGradient id="ks-footer-shade" x2="0" y2="1"><stop stop-color="#183429" stop-opacity="0"/><stop offset="1" stop-color="#19342c"/></linearGradient>
     ${leaflet()} ${fruit()} ${strawberryBlossom()}
-    <g id="ks-leaf-fan">${use('leaflet',1,0,.91,48)}${use('leaflet',-1,0,.91,-49)}${use('leaflet',0,.5,1.07,1)}</g>
-    <g id="ks-strawberry-plant">${line('M0 1Q-3 -12 -17 -23M0 1Q13 -9 19 -18M0 1Q1 -22 2 -33','#6d815e',1.6)}${use('leaf-fan',-17,-23,.65,-46)}${use('leaf-fan',19,-18,.68,54)}${use('leaf-fan',2,-33,.67,4)}</g>
+    <g id="ks-leaf-fan">${use('leaflet',1,0,.88,57,.66)}${use('leaflet',-1,0,.94,-47,.79)}${use('leaflet',0,.5,1.04,6,.96)}</g>
+    <g id="ks-strawberry-plant">${line('M0 1Q-3 -12 -17 -23M0 1Q13 -9 19 -18M0 1Q1 -22 2 -33','#718160',1.25)}${use('leaf-fan',-17,-23,.62,-61,.47)}${use('leaf-fan',19,-18,.72,64,.57)}${use('leaf-fan',2,-33,.72,-13,.56)}</g>
+    ${includePlanting?[0,1,2].map(i=>meadowGrass(i)+treeCrown(i)).join(''):''}
     ${botanical.map((type,i)=>`<g id="ks-border-${type}">${sprig(type,{seed:82+i*7,prefix:'ks-bot',detail:type!=='breath'})}</g>`).join('')}
     </defs>`;
 }
@@ -76,6 +80,66 @@ export function berryCluster(){
 const pathCenter = t => .525 + .079*Math.sin(t*Math.PI*1.49) - .044*t;
 const halfPath = t => .009 + .097*Math.pow(t,1.52);
 const walkY = t => .272+t*.728;
+
+function meadowGrass(kind) {
+  const rng=seeded(1959+kind*52);
+  let blades='',awn='';
+  for(let i=0;i<16;i++){
+    const x=(rng()-.5)*8,lean=(rng()-.49)*65,len=18+rng()*54;
+    const baseX=x+lean*.17,bend=x+lean*.37,tipX=x+lean;
+    blades+=`<path d="M${pt(x,0)}Q${pt(baseX,-len*.56)} ${pt(tipX,-len)}Q${pt(bend,-len*.58)} ${pt(x+1.4+rng(),0)}Z" fill="${['#324e3e','#557151','#768464','#617d5c'][i%4]}"/>`;
+    if(i%5!==0)continue;
+    let seeds='';
+    for(let j=0;j<5;j++){
+      const run=j*1.65,yy=-j*2.4;
+      seeds+=`M${pt(tipX+run,-len+yy)}q-2 -2.8 -2.9 -6q2.7 2.5 2.9 6q1.8 -4.1 4.2 -5.2q-.8 2.4 -4.2 5.2`;
+    }
+    awn+=line(`M${pt(tipX,-len)}q3 -5 7 -11`,'#969977',.55)+`<path d="${seeds}" fill="#b2ab82" opacity=".77"/>`;
+  }
+  return `<g id="ks-grass-${kind}">${blades+awn}</g>`;
+}
+
+function treeCrown(kind) {
+  const rng=seeded(441+kind);
+  const crown=[];
+  let flecks='';
+  for(let j=0;j<30;j++){
+    const theta=j*Math.PI*2/30,r=10*(1+.09*Math.sin(j*2.7+kind)+.13*rng());
+    crown.push(pt(Math.cos(theta)*r,Math.sin(theta)*r*.85));
+  }
+  for(let j=0;j<11;j++){
+    flecks+=`M${pt((rng()-.58)*13,-1-rng()*5)}q1 -.9 2.1 -.6`;
+  }
+  return `<g id="ks-crown-${kind}"><path d="M${crown.join('L')}Z" fill="currentColor"/>${line(flecks,'#98a589',.48,.19)}</g>`;
+}
+
+function woodland(w,h,rng) {
+  const horizon=h*.29,treeScale=Math.min(h,w*.86);
+  let trees='';
+  // A low gap in the trees behind the gate carries the horizon light through it.
+  for(let tier=0;tier<2;tier++){
+    const count=tier?12:19;
+    for(let i=0;i<count;i++){
+      const u=(i+(rng()-.5)*.64)/(count-1);
+      const edge=Math.min(1,Math.abs(u-.525)*2.1);
+      const tall=treeScale*(tier?.096:.069)*(.65+rng()*.53)*(.46+edge*1.1);
+      const x=u*w,y=horizon+(tier?4:-2),radius=tall*(.31+rng()*.2);
+      const colors=tier?['#3c5448','#40574b','#465d50']:['#495f55','#51665a','#566d5f'];
+      const stem=tier?'#32483d':'#526459';
+      let branches='',crowns='';
+      for(let k=0;k<9;k++){
+        const a=k*2.4,rad=radius*Math.sqrt(k/9);
+        const cx=x+Math.cos(a)*rad,cy=y-tall*.70+Math.sin(a)*rad*.69;
+        const r=radius*(.42+rng()*.33);
+        branches+=`M${pt(x,y-tall*(.13+rng()*.28))}Q${pt((x+cx)*.5,y-tall*.51)} ${pt(cx,cy)}`;
+        crowns+=`<g color="${colors[k%3]}">${use('crown-'+(k%3),cx,cy,r*.1,(rng()-.5)*30)}</g>`;
+      }
+      trees+=line(`M${pt(x,y)}q${pt(-tall*.035,-tall*.24)} ${pt(tall*.018,-tall*.6)}`,stem,tall*.042)
+        +line(branches,stem,tall*.017)+crowns;
+    }
+  }
+  return `<ellipse cx="${n(w*.53)}" cy="${n(h*.19)}" rx="${n(w*.63)}" ry="${n(h*.29)}" fill="url(#ks-horizon-light)"/>${trees}`;
+}
 
 function ground(w,h,rng){
   const bankY=.266*h;
@@ -96,7 +160,7 @@ function ground(w,h,rng){
       ridge+=(ridge?'L':'M')+pt(x,y);
       hedgeInk+=`M${pt(x+1,y+2.4)}q-1 -.8 -2.3 .6m.3 2.5 1.9 -.5`;
     }
-    back+=`<path d="${ridge}L${pt(w,h*.35)}H-4Z" fill="${tier?'#485f4c':'#3e584d'}"/>`+line(hedgeInk,'#9ea88a',.62,.62);
+    back+=`<path d="${ridge}L${pt(w,h*.35)}H-4Z" fill="${tier?'#485f4c':'#3e584d'}"/>`+line(hedgeInk,'#9ea88a',.55,.31);
   }
   for(const side of [-1,1]){
     const points=[];
@@ -120,23 +184,30 @@ function ground(w,h,rng){
     if(Math.abs(x-pathCenter(t))<halfPath(t)+.025)continue;
     moss+=`<ellipse cx="${n(w*x)}" cy="${n(h*walkY(t))}" rx="${n(w*(.03+rng()*.077))}" ry="${n(h*(.009+t*.027))}" fill="url(#ks-ground-moss)"/>`;
   }
+  for(let i=0;i<39;i++){
+    const u=rng(),t=rng()*.86;
+    if(Math.abs(u-pathCenter(t))<halfPath(t)+.035)continue;
+    const x=w*u,y=h*walkY(t);
+    moss+=`<ellipse cx="${n(x)}" cy="${n(y)}" rx="${n(w*(.019+rng()*.058))}" ry="${n(h*(.004+t*.022))}" transform="rotate(${n(-3-rng()*11)} ${pt(x,y)})" fill="url(#ks-meadow-brush)"/>`;
+  }
   // Distant and near courses share the same perspective projection. Broken
   // flagstones grow in depth and split across the path as it approaches us.
   for(let i=1;i<=26;i++){
     const near=Math.pow(i/26,1.69),far=Math.pow((i-1)/26,1.69);
     const t=(far+near)/2, y=h*walkY(t),depth=(near-far)*h*.728;
     const half=w*halfPath(t)*.93,center=w*pathCenter(t);
-    const cuts=[-1,-.34+(rng()-.5)*.27,.30+(rng()-.5)*.32,1];
+    const cuts=i%3===1?[-1,(rng()-.5)*.49,1]:[-1,-.34+(rng()-.5)*.43,.30+(rng()-.5)*.43,1];
     for(let j=0;j<cuts.length-1;j++){
-      const x=center+half*(cuts[j]+cuts[j+1])*.5,rx=half*(cuts[j+1]-cuts[j])*.45;
+      const x=center+half*(cuts[j]+cuts[j+1])*.5,rx=half*(cuts[j+1]-cuts[j])*(.39+rng()*.07);
       const skew=(rng()-.5)*.17,dy=(rng()-.5)*depth*.13;
       const shape=[[-.94,-.11],[-.61,-.37],[.37,-.43],[.90,-.24],[1,.21],[.43,.40],[-.66,.42],[-.99,.17]];
-      const d=shape.map(([u,v],k)=>(k?'L':'M')+pt(x+rx*u,y+dy+depth*(v+skew*u))).join('')+'Z';
-      stones+=`<path d="${d}" fill="${['#aaa487','#a09b82','#b6ae90','#97967c','#aaa68a'][Math.floor(rng()*5)]}" stroke="#666d58" stroke-width="${n(.33+t*.65)}"/>`;
-      stones+=line(`M${pt(x-rx*.82,y+dy-depth*(.13+skew))}l${pt(rx*.28,-depth*.16)}l${pt(rx*.91,-depth*.045)}`,'#d4cbaa',.4+t*.5,.7);
+      const d=shape.map(([u,v],k)=>(k?'L':'M')+pt(x+rx*(u+(rng()-.5)*.19),y+dy+depth*(v+skew*u+(rng()-.5)*.18))).join('')+'Z';
+      stones+=`<path d="${d}" fill="${['#94947c','#848875','#a29e86','#949682','#7e856f'][Math.floor(rng()*5)]}" stroke="#505d4b" stroke-width="${n(.33+t*.53)}"/>`;
+      stones+=line(`M${pt(x-rx*.82,y+dy-depth*(.13+skew))}l${pt(rx*.28,-depth*.16)}l${pt(rx*.91,-depth*.045)}`,'#c2bd9c',.4+t*.44,.57);
+      if(i>16&&j===i%3)stones+=line(`M${pt(x+rx*.82,y+dy+depth*.18)}q${pt(-rx*.18,-depth*.06)} ${pt(-rx*.24,-depth*.2)}l${pt(-rx*.16,depth*.02)}`,'#596451',.48+t*.28,.72);
     }
   }
-  return back+`<path d="${silhouette}" fill="url(#ks-lawn)"/>`+moss+line(soil,'#c0bd8a',.65,.55)+line(shadow,'#314d3d',.75,.82)
+  return woodland(w,h,rng)+back+`<path d="${silhouette}" fill="url(#ks-lawn)"/>`+moss+line(soil,'#a4ae83',.56,.36)+line(shadow,'#314d3d',.75,.68)
     +`<path d="${walk}" fill="url(#ks-walk)"/>`+edges+stones+`<path d="${silhouette}" fill="url(#ks-garden-ink)"/>`;
 }
 
@@ -147,57 +218,61 @@ function arbor(w,h) {
   for(const side of [-1,1]){
     const extent=(side===-1?cx:w-cx)/s;
     const horiz=u=>side*(24+u*(extent-24));
-    const base=u=>-2+u*11;
+    const base=u=>-2+u*9+Math.sin(u*7)*1.5;
     for(let i=0;i<=extent/16;i++){
       const u=i/Math.ceil(extent/16), x=horiz(u), b=base(u),length=14+u*8;
-      fence+=`<path d="M${pt(x-1.6,b)}v${n(-length)}l1.5 -3 2 3v${n(length)}" fill="#8e977e" stroke="#536354" stroke-width=".58"/>`;
+      fence+=`<path d="M${pt(x-1.3,b)}v${n(-length)}l1.3 -1.3 1.4 1.5v${n(length)}" fill="#899077" stroke="#526455" stroke-width=".6"/>`;
     }
-    for(const height of [6,11]) fence+=line(`M${pt(horiz(0),base(0)-height)}L${pt(horiz(1),base(1)-height-1)}`,'#a9ab8d',1.6);
+    for(const height of [6,11]) fence+=line(`M${pt(horiz(0),base(0)-height)}Q${pt(horiz(.53),base(.53)-height+1)} ${pt(horiz(1),base(1)-height-1)}`,'#a0a38a',1.35,.87);
   }
   let trellis='';
   for(const side of [-1,1]) {
     for(let i=0;i<5;i++) trellis+=line(`M${pt(side*19,-6-i*7)}l${pt(side*5,-7)}m${pt(-side*5,0)}l${pt(side*5,7)}`,'#a39e79',.8);
   }
   const vine=[];
-  for(let i=0;i<24;i++){
-    const a=i/23*Math.PI;
+  for(let i=0;i<36;i++){
+    const a=i/35*Math.PI;
     const x=Math.cos(a)*23, yy=-41-22*Math.sin(a);
-    vine.push(use('leaflet',x,yy,.29,i%2?43:-40),i%3===0?use('berry-flower',x-2,yy-1,.30,i*8):'');
+    const cluster=.24+.12*Math.sin(a*5)**2;
+    vine.push(use('leaflet',x+2*Math.sin(5*a),yy+2*Math.cos(a*7),cluster,(i%2?47:-45)+32*Math.cos(a*3)),i%5===0?use('berry-flower',x-2,yy-1,.25,i*8):'');
   }
-  return `<g transform="translate(${pt(cx,y)}) scale(${n(s)})" opacity=".88">${fence}
+  const climbing=side=>line(`M${side*24} 0q${side*6} -17 -.5 -30t1 -21`,'#657453',1.9)
+    +Array.from({length:11},(_,i)=>use('leaflet',side*(24+Math.sin(i*.7)*2),-4-i*4,.16+(i%3)*.046,side*(i%2?47:-51),.19+(i%4)*.03)).join('');
+  return `<g transform="translate(${pt(cx,y)}) scale(${n(s)})" opacity=".85">${fence}
     <path d="M-25 0V-39A25 25 0 0 1 25 -39V0h-5v-39a20 20 0 0 0-40 0v39Z" fill="#929579" stroke="#4b6051" stroke-width=".85"/>
-    ${line('M-24 -1v-38a24 24 0 0 1 48 0V-1','#c8c4a3',1.05)}${trellis}${vine.join('')}
+    ${line('M-24 -1v-38a24 24 0 0 1 48 0V-1','#b9b99c',.9)}${trellis}${climbing(-1)}${climbing(1)}${vine.join('')}
     </g>`;
 }
 
 function borders(w,h,rng) {
-  let out='';
+  const layers=[];
   const size=Math.min(w/500,h/345);
   // Each plant starts at a point on the banks of the path. Distance determines
   // the size and colour of its row, including the foreground strawberry runners.
   const rows=[
-    [.16, .38, ['foliage','wildflower','fern','lavender'],.72],
-    [.32, .54, ['lavender','foliage','breath','fern'],.85],
-    [.57, .75, ['fern','foliage','wildflower','foliage'],.98],
-    [.78, .95, ['strawberry-plant','strawberry-plant','fern'],1]
+    [.025,.14,['grass-1','lavender','grass-2'],.48],
+    [.14,.36,['grass-1','wildflower','fern','lavender'],.69],
+    [.32,.54,['lavender','grass-0','breath','fern'],.8],
+    [.53,.78,['fern','grass-2','wildflower','foliage'],.95],
+    [.79,.98,['strawberry-plant','grass-1','fern'],1]
   ];
   for(const [start,end,types,opacity] of rows){
-    let plants='';
-    const count=Math.round(16+w/28);
+    const count=Math.round(13+w/38);
     for(let i=0;i<count;i++){
-      const x=(i+.23+rng()*.5)/count, t=start+rng()*(end-start);
-      if(Math.abs(x-pathCenter(t))<halfPath(t)+.021)continue;
+      const x=(i+.1+rng()*.8)/count, t=start+rng()*(end-start);
+      if(Math.abs(x-pathCenter(t))<halfPath(t)+.008)continue;
       const y=h*walkY(t), kind=types[Math.floor(rng()*types.length)];
-      const s=(.14+t*.47)*(.63+rng()*.45)*size;
+      const s=(.105+t*.46)*(.58+rng()*.71)*size;
       const angle=(rng()-.5)*49;
-      plants+=kind==='strawberry-plant'?use(kind,x*w,y,s*1.77,angle):use('border-'+kind,x*w,y,s,angle);
+      const field=kind==='strawberry-plant'||kind.startsWith('grass');
+      const plant=use(field?kind:'border-'+kind,x*w,y,field?s*1.6:s,angle);
+      layers.push({y,art:`<g opacity="${opacity}">${plant}</g>`});
     }
-    out+=`<g opacity="${opacity}">${plants}</g>`;
   }
   // Small drifts in the same bed connect the larger specimens to one another.
   // Shade and the earthed stems overlap from back to front within each drift.
   const groups=[[.15,.19,'lavender'],[.72,.23,'daisy'],[.94,.26,'lavender'],[.36,.38,'daisy'],
-    [.09,.48,'white-lily'],[.82,.57,'pink-lily'],[.22,.62,'lavender'],[.63,.74,'daisy']];
+    [.09,.48,'white-lily'],[.82,.57,'pink-lily'],[.22,.62,'lavender'],[.675,.74,'daisy']];
   for(const [u,t,flower] of groups){
     const base=h*walkY(t),num=flower.includes('lily')?3:5;
     let bloom='',heads='';
@@ -209,9 +284,33 @@ function borders(w,h,rng) {
       bloom+=use('border-foliage',x-2*size,y+2*size,s*.71,angle-9);
       heads+=use('border-'+flower,x,y,s,angle);
     }
-    out+=`<ellipse cx="${n(w*u)}" cy="${n(base)}" rx="${n(size*(18+num*4))}" ry="${n(6*size)}" fill="url(#ks-ground-moss)"/><g opacity="${n(.63+t*.29)}">${bloom+heads}</g>`;
+    const art=`<ellipse cx="${n(w*u)}" cy="${n(base)}" rx="${n(size*(18+num*4))}" ry="${n(6*size)}" fill="url(#ks-ground-moss)"/><g opacity="${n(.51+t*.39)}">${bloom+heads}</g>`;
+    layers.push({y:base,art});
   }
-  return out;
+  // Grasses and matte leaf shadows cross the stone edges where garden and path meet.
+  for(const side of [-1,1]){
+    for(let i=0;i<27;i++){
+      const t=(i+.3+rng()*.49)/27,y=h*walkY(t),offset=(.001+rng()*.011)*side;
+      const x=w*(pathCenter(t)+side*halfPath(t)+offset);
+      const s=(.04+t*.36)*size;
+      const art=use('grass-'+(i%3),x,y,s,rng()*35*side);
+      layers.push({y,art});
+    }
+  }
+  // Ragged planting pockets bring the banks into larger masses of light
+  // and shade. Grass fans share a crown, while the seed heads lean apart.
+  const pockets=[[.04,.18],[.19,.29],[.83,.17],[.69,.38],[.29,.53],[.07,.7],[.89,.73],[.61,.87],[.04,.98],[.92,.99]];
+  const pocketScale=Math.min(w/470,h/364)*Math.min(1.42,Math.max(1,h/w));
+  for(const [u,t] of pockets){
+    const y=h*walkY(t),x=w*u,s=(.14+t*.86)*pocketScale;
+    let grass='';
+    for(let j=0;j<5;j++){
+      const offset=(j-2)*(8+rng()*2.6)*s;
+      grass+=use('grass-'+(j%3),x+offset,y+Math.sin(j)*2*s,s*(.45+rng()*.49),offset*.22);
+    }
+    layers.push({y,art:`<ellipse cx="${n(x)}" cy="${n(y)}" rx="${n(s*39)}" ry="${n(s*7)}" fill="url(#ks-ground-moss)"/>${grass}`});
+  }
+  return layers;
 }
 
 function runners(w,h,rng) {
@@ -220,13 +319,14 @@ function runners(w,h,rng) {
   for(const side of [-1,1]){
     const stop=side<0?.007:.995, start=pathCenter(.9)+side*(halfPath(.9)+.045);
     const px=t=>w*(start+(stop-start)*t);
-    const py=t=>h*(.89+.035*Math.sin(t*9+side)+.03*t);
+    const py=t=>h*(.895+.052*Math.sin(t*8.5+side)+.048*t);
     let runner=`M${pt(px(0),py(0))}`;
     for(let i=1;i<=34;i++){const t=i/34;runner+='L'+pt(px(t),py(t));}
-    paths+=line(runner,'#223d30',2.9*size)+line(runner,'#b19e6d',1.25*size);
+    paths+=line(runner,'#223d30',2.3*size)+line(runner,'#8b8a63',.94*size);
     for(let i=0;i<8;i++){
-      const t=(i+.3)/8,x=px(t),y=py(t),s=size*(.68+rng()*.35);
-      plants+=use('strawberry-plant',x,y,s,(rng()-.5)*38);
+      const t=(i+.08+rng()*.52)/8,x=px(t),y=py(t),s=size*(.61+rng()*.54);
+      plants+=use('grass-'+(i%3),x+size*7,y+size*2,s*.72,(rng()-.5)*20)
+        +use('strawberry-plant',x,y,s,(rng()-.5)*59);
       if(i%3!==1)continue;
       const fx=x+side*8*s, fy=y+3*s;
       plants+=line(`M${pt(x,y-7*s)}Q${pt(fx+side*2*s,fy-12*s)} ${pt(fx,fy-6*s)}`,'#a1a37a',1);
@@ -239,9 +339,8 @@ function runners(w,h,rng) {
 
 export function strawberryBackdrop(w,h) {
   const rng=seeded(301130);
+  const terrain=ground(w,h,rng)+arbor(w,h);
+  const bordersByDepth=borders(w,h,rng);
   const patch=runners(w,h,rng);
-  return {
-    background:ground(w,h,rng)+arbor(w,h)+borders(w,h,rng)+patch.plants,
-    fruit:patch.berries
-  };
+  return {background:terrain,layers:bordersByDepth,patch};
 }

@@ -27,6 +27,7 @@ svg{display:block}
 .tool-button,.icon-button,.page-buttons button{border:0;background:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:44px;min-height:44px}
 .tool-button{font:500 12px/1 var(--sans);letter-spacing:.25px;color:#e5dfc8}
 .tool-button svg{width:17px;height:17px;color:#d3c39e}
+#sound[aria-pressed="true"] .sound-icon svg{color:#f3cd86}
 .tools .chapters-button{padding:0 17px;min-height:44px;border:1px solid #66705b;border-radius:999px}
 .tool-button:hover,.page-buttons button:hover,.icon-button:hover{color:#fff3c7}
 .tool-button:hover svg{color:#fff0c5}
@@ -34,15 +35,22 @@ svg{display:block}
 .scenery,.sky,.dawn,#stars,#hills,#motes,#garden,.garden-shade,.etched-frame,.scene{position:absolute;inset:0}
 .scenery,.etched-frame,.page-numeral{pointer-events:none}
 .scenery{z-index:0;isolation:isolate;overflow:hidden}
-.sky{background:radial-gradient(ellipse at 49% 35%,#315253 -26%,transparent 51%),linear-gradient(170deg,#0b2028 3%,var(--sky,#163b3c) 53%,#48605a 103%)}
-.dawn{opacity:0;transition:opacity 3s ease;background:radial-gradient(ellipse at 50% 80%,#b89b70 -16%,transparent 57%),linear-gradient(176deg,#273f48,#637777 59%,#c2a984 110%)}
+.sky{background:radial-gradient(ellipse at 36% 19%,#44615e -24%,transparent 52%),radial-gradient(ellipse at 66% 84%,#6d7864 -22%,transparent 43%),linear-gradient(165deg,#0b1e28 2%,var(--sky,#163b3c) 57%,#536658 100%)}
+.sky::after{content:"";position:absolute;top:1%;left:-10%;width:125%;height:52%;background:var(--mountain-air) center/100% 100% no-repeat;opacity:.13;animation:high-air 47s ease-in-out infinite alternate}
+.dawn{opacity:0;transition:opacity 3.6s cubic-bezier(.28,.05,.34,1);background:radial-gradient(ellipse at 59% 78%,#e2b58b -24%,transparent 52%),linear-gradient(169deg,#293c48 0%,#677976 54%,#bfaa86 88%)}
 #stars,#hills{transform:translateX(var(--parallax,0));left:-2px;right:-2px;transition:opacity 2s}
 #stars>svg,#hills>img{width:100%;height:100%;display:block}
+#hills>img{position:absolute;inset:0}
+.valley-mist{position:absolute;left:-10%;right:-10%;bottom:5%;height:27%;background:var(--mountain-air) center/100% 100% no-repeat;opacity:.62;animation:valley-air 31s ease-in-out infinite alternate}
+@keyframes valley-air{from{transform:translate3d(-2%,2%,0) scaleY(.94)}to{transform:translate3d(2.6%,-1.6%,0) scaleY(1.08)}}
+@keyframes high-air{from{transform:translate3d(-2%,-1%,0)}to{transform:translate3d(3.5%,1.5%,0)}}
+.scenery::before{content:"";position:absolute;z-index:3;inset:0;background:linear-gradient(110deg,#203c3b12 5%,transparent 38%,#172c3114 94%);pointer-events:none}
 #motes{width:100%;height:100%;z-index:3}
 #garden{z-index:2;transition:opacity .95s,filter 1.4s}
 .garden-shade{z-index:4;background:linear-gradient(to top,rgba(6,22,22,.32),transparent 13%);transition:background 1s}
 .scenery:after{content:"";position:absolute;inset:0;z-index:5;opacity:.40;background-image:var(--grain);pointer-events:none}
-.book[data-stage="2"] .dawn{opacity:.27}
+.book.awakening .dawn,.book[data-stage="1"] .dawn{opacity:.14}
+.book[data-stage="2"] .dawn{opacity:.35}
 .book[data-stage="3"] .dawn{opacity:.86}
 .book[data-stage="7"] .dawn{opacity:.58}
 .book[data-stage="3"] #stars{opacity:.43}
@@ -107,9 +115,9 @@ svg{display:block}
 .signature{font-style:italic;font-size:clamp(19px,2vw,29px);margin:14px 0 0;color:#efe0b8}
 .finale .aside{animation:arrive .8s .55s both}
 .finale .signature{animation:arrive .85s 1.05s both}
-.closing-actions{position:absolute;bottom:27px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;width:max-content;max-width:90%;padding:4px 12px;gap:4px 12px;border:1px solid #94916e80;background:#142e2df5;border-radius:4px}
-.closing-actions .garden-button{font-size:12px;padding:6px 8px;border:0;border-radius:0;background:transparent}
-.closing-actions .garden-button:hover{text-decoration:underline;text-underline-offset:4px}
+.closing-actions{position:absolute;bottom:27px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;width:max-content;max-width:90%;gap:5px 8px}
+.closing-actions .garden-button{font-size:12px;padding:6px 13px;background:#193531ed;border-color:#aa9e78;box-shadow:0 2px 6px #142a2726}
+.closing-actions .garden-button:hover{background:#2e483b;border-color:#d9cb98}
 .closing-actions .garden-button svg{width:13px}
 .book[data-stage="7"] .page-numeral{display:none}
 .page-numeral{z-index:4;position:absolute;bottom:15px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;color:#dacaa4;opacity:.82}
@@ -135,6 +143,10 @@ svg{display:block}
 .contents-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .contents-top h2{font-weight:400;font-size:34px;letter-spacing:-.05em;margin:0}
 .icon-button svg{width:20px;height:20px}
+#chapter-dialog{animation:contents-in .23s cubic-bezier(.2,.68,.25,1) both}
+@keyframes contents-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.garden-button,.tool-button,.page-buttons button{transition:background-color .2s,color .2s,transform .2s ease}
+.garden-button:active,.tool-button:active,.page-buttons button:active:not(:disabled){transform:translateY(1px)}
 #contents{display:grid}
 #contents button{display:flex;gap:16px;align-items:center;text-align:left;min-height:46px;border:0;border-top:1px solid #69765b80;background:transparent;padding:8px 4px;font-size:19px}
 #contents button>span{width:25px;font:italic 13px var(--serif);color:#d1bd8f}
@@ -142,12 +154,13 @@ svg{display:block}
 #contents button:hover,#contents button[aria-current]{color:#eacc8c}
 #contents button:hover>svg,#contents button[aria-current]>svg{opacity:1}
 .hidden-tab *, .hidden-tab *::after,.hidden-tab *::before{animation-play-state:paused!important}
+.book[inert] .scenery *,.book[inert] .scenery *::before,.book[inert] .scenery *::after{animation-play-state:paused!important}
 @media(max-width:700px){
   .book{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
   .masthead{height:61px;padding:0 3px}
   .emblem{width:27px}.dedication{gap:6px;font-size:24px}
   .tools{gap:3px}.tool-button{font-size:11px}.tools .chapters-button{min-height:44px;padding:0 10px;border:0}
-  #sound .tool-text{display:none}
+  #sound{gap:5px}
   .recipient{font-size:clamp(40px,13.5vw,87px)}
   .salutation{font-size:clamp(24px,6.45vw,34px)}
   .centerpiece{padding:8px 16px 36px}
@@ -164,11 +177,12 @@ svg{display:block}
   .growing h1{font-size:clamp(34px,8.25vw,51px)}
   .celebration .salutation{font-size:clamp(18px,5.1vw,29px)}
   .celebration .aside{max-width:85%}.celebration-ornament{width:78px}
-  .closing-actions{width:min(286px,86%);display:grid;grid-template-columns:repeat(2,1fr);gap:0;padding:0 5px;bottom:14px}
+  .closing-actions{width:min(270px,86%);display:grid;grid-template-columns:repeat(2,1fr);gap:4px 5px;bottom:14px}
   .closing-actions .garden-button{font-size:11px;padding:6px 5px}
   .finale{padding-bottom:52px}
   .etched-frame>span{width:32px;height:32px}
 }
+@media(max-width:349px){#sound .tool-text{display:none}}
 @media(max-height:680px){
   .masthead{height:53px}.colophon{min-height:48px;height:48px}
   .greeting .moon-art{width:87px;margin-bottom:3px}.date-line{margin-bottom:11px}

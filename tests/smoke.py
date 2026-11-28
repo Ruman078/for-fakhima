@@ -165,6 +165,27 @@ def walk(browser, engine, size, url, captures):
         page.wait_for_timeout(420)
         locator("#next").evaluate("(e)=>{e.click();e.click();e.click()}")
         chapter(3)
+        # Interrupt a page turn by choosing the page that is still visible.
+        # A half-read letter must keep its open state and scroll position.
+        if not reduced:
+            visit(5)
+            press(".ks-open")
+            page.wait_for_timeout(1450)
+            article.evaluate("(e)=>{e.scrollTop=60}")
+            before = article.evaluate("(e)=>e.scrollTop")
+            page.evaluate("""() => {
+                const choose = i => {
+                    document.querySelector('#chapters').click();
+                    document.querySelector('[data-page="' + i + '"]').click();
+                };
+                choose(7);
+                setTimeout(() => choose(5), 45);
+            }""")
+            page.wait_for_timeout(700)
+            chapter(5)
+            expect(article).to_have_attribute("aria-hidden", "false")
+            assert article.evaluate("(e)=>e.scrollTop") == before
+            assert not locator("#scene").evaluate("(e)=>e.inert")
         assert not (errors or failed or remote), (errors, failed, remote)
         print(f"PASS {engine} {width}x{height} reduced-motion={reduced}", flush=True)
     finally:

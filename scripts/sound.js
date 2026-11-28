@@ -15,16 +15,15 @@ function webPlayer(AudioContext, interrupted) {
   master.gain.value = 0;
   master.connect(context.destination);
   const cache = new Map();
-  let active, air;
-  const buffer = key => {
-    if (!cache.has(key)) {
-      const samples = key === 'air' ? renderAir() : renderCue(key);
-      const data = context.createBuffer(1, samples.length, rate);
-      data.getChannelData(0).set(samples);
-      cache.set(key, data);
-    }
-    return cache.get(key);
+  const airGain = context.createGain();
+  airGain.connect(master);
+  let active, air, airBuffer, airStart = 0, airOffset = 0;
+  const buffer = samples => {
+    const data = context.createBuffer(1, samples.length, rate);
+    data.getChannelData(0).set(samples);
+    return data;
   };
+  const yieldControl = () => globalThis.scheduler?.yield?.() ?? new Promise(resolve => setTimeout(resolve, 0));
   function stopNote(fade = 0) {
     if (!active) return;
     const now = context.currentTime, { source, volume } = active;
@@ -39,7 +38,8 @@ function webPlayer(AudioContext, interrupted) {
     if (context.state !== 'running') throw new Error('interrupted');
     stopNote(.025);
     const source = context.createBufferSource(), volume = context.createGain();
-    source.buffer = buffer(key);
+    if (!cache.has(key)) cache.set(key, buffer(renderCue(key)));
+    source.buffer = cache.get(key);
     source.connect(volume); volume.connect(master);
     active = {source, volume};
     source.onended = () => {
@@ -59,16 +59,30 @@ function webPlayer(AudioContext, interrupted) {
       master.gain.value = .90;
       if (key) play(key);
       if (!air) {
+        // Let the first cue play immediately, then render the longer bed in
+        // small slices so tapping Sound leaves the garden responsive.
+        airBuffer ??= renderAir(yieldControl).then(buffer);
+        const waveform = await airBuffer;
+        if (!current()) return;
+        if (context.state !== 'running') throw new Error('interrupted');
         air = context.createBufferSource();
-        air.buffer = buffer('air'); air.loop = true;
-        air.connect(master); air.start();
+        air.buffer = waveform; air.loop = true;
+        const now = context.currentTime;
+        airGain.gain.cancelScheduledValues(now);
+        airGain.gain.setValueAtTime(0, now);
+        airGain.gain.linearRampToValueAtTime(1, now + .55);
+        air.connect(airGain); air.start(now, airOffset);
+        airStart = now;
       }
     },
     play,
     stop() {
       master.gain.value = 0;
       stopNote();
-      if (air) { air.stop(); air.disconnect(); air = null; }
+      if (air) {
+        airOffset = (airOffset + context.currentTime - airStart) % air.buffer.duration;
+        air.stop(); air.disconnect(); air = null;
+      }
       if (context.state !== 'closed') context.suspend().catch(() => {});
     },
     dispose() {
@@ -77,12 +91,14 @@ function webPlayer(AudioContext, interrupted) {
   };
 }
 
-function mediaPlayer() {
+function mediaPlayer(interrupted) {
   // First-party PCM served over HTTP also works in engines which reject
   // perfectly valid, locally synthesized blob: and data: media.
   const notes = new Audio();
   const air = new Audio(new URL('../audio/garden-air.wav', import.meta.url).href);
   notes.preload = 'auto'; air.preload = 'auto'; air.loop = true;
+  notes.volume = air.volume = .90;
+  air.addEventListener('pause', () => { if (air.paused) interrupted(); });
   let revision = 0;
   function stopNotes() {
     revision++; notes.pause();
@@ -103,16 +119,11 @@ function mediaPlayer() {
       // Both calls are issued synchronously while the activation is still valid.
       const phrase = key ? play(key) : null;
       air.muted = false;
-      const breeze = air.play();
-      if (phrase) {
-        breeze.catch(() => {});
-        await starting(phrase, 6500);
-      } else await starting(breeze, 6500);
+      await starting(Promise.all([phrase, air.play()]), 6500);
       if (current() && notes.paused && air.paused) throw new Error('interrupted');
     },
     async play(key) {
-      if (air.paused) air.play().catch(() => {});
-      await play(key);
+      await Promise.all([play(key), air.paused && air.play()]);
     },
     stop() {
       notes.muted = true; air.muted = true;
@@ -154,11 +165,11 @@ export function gardenSound(onState) {
         } catch (error) {
           if (!current()) return;
           if (!nativeWave) throw error;
-          player?.dispose(); useWeb = false; player = mediaPlayer();
+          player?.dispose(); useWeb = false; player = mediaPlayer(interrupted);
           await player.start(key, current);
         }
       } else {
-        player ??= mediaPlayer();
+        player ??= mediaPlayer(interrupted);
         await player.start(key, current);
       }
       if (current()) update('on');

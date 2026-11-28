@@ -31,4 +31,4 @@ await mkdir(new URL('cues/', directory), { recursive: true });
 for (const key of Object.keys(score)) {
   await writeFile(new URL('cues/' + key + '.wav', directory), wav(renderCue(key)));
 }
-await writeFile(new URL('garden-air.wav', directory), wav(renderAir()));
+await writeFile(new URL('garden-air.wav', directory), wav(await renderAir()));

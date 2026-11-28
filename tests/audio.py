@@ -66,6 +66,10 @@ def check_audio(browser, url, fallback):
     def level():
         return page.evaluate("Math.max(0,...window.levels)")
 
+    # A dry tap should stand clearly above the strongest passage of wind.
+    # Compare in RMS with headroom for the browser's native resampler.
+    cue_floor = .022
+
     def activate(selector, name, expected=True):
         page.evaluate("window.levels=[]")
         target = page.locator(selector) if isinstance(selector, str) else selector
@@ -73,7 +77,7 @@ def check_audio(browser, url, fallback):
         page.wait_for_timeout(530)
         peak_rms = level()
         if expected:
-            assert peak_rms > .034, (name, peak_rms)
+            assert peak_rms > cue_floor, (name, peak_rms, cue_floor)
         elif name == "disabled cue":
             assert peak_rms < .001, (name, peak_rms)
         return peak_rms
@@ -84,7 +88,8 @@ def check_audio(browser, url, fallback):
     page.evaluate("window.levels=[]")
     page.wait_for_timeout(200)
     air_level = level()
-    assert .001 < air_level < .035, ("garden air", air_level)
+    assert .001 < air_level < .018, ("garden air", air_level)
+    cue_floor = max(cue_floor, 1.8 * air_level)
     peaks.append(activate("#chapters", "open chapters"))
     peaks.append(activate('[data-page="4"]', "enter bouquet"))
     for selector in ['[data-flower="daisy"]','[data-flower="white-lily"]','[data-bq-action="arrange"]',
@@ -117,7 +122,8 @@ def check_native_recovery(browser, url):
       const nativePlay = HTMLMediaElement.prototype.play;
       HTMLMediaElement.prototype.play = function() {
         if (!players.includes(this)) players.push(this);
-        return blocked ? Promise.reject(new DOMException('blocked','NotAllowedError')) : nativePlay.call(this);
+        const deny = blocked === true || (blocked === 'air' && this.loop);
+        return deny ? Promise.reject(new DOMException('blocked','NotAllowedError')) : nativePlay.call(this);
       };
     """)
     page.goto(url)
@@ -125,7 +131,15 @@ def check_native_recovery(browser, url):
     button.tap()
     expect(button).to_have_attribute("aria-label", "Try sound again")
     assert page.evaluate("players.every(a=>a.paused && a.muted)")
+    page.evaluate("blocked='air'")
+    button.tap()
+    expect(button).to_have_attribute("aria-label", "Try sound again")
+    assert page.evaluate("players.every(a=>a.paused && a.muted)")
     page.evaluate("blocked=false")
+    button.tap()
+    expect(button).to_have_attribute("aria-pressed", "true")
+    page.evaluate("players.find(a=>a.loop).pause()")
+    expect(button).to_have_attribute("aria-label", "Resume sound")
     button.tap()
     expect(button).to_have_attribute("aria-pressed", "true")
     page.locator("#chapters").tap()
@@ -143,7 +157,50 @@ def check_native_recovery(browser, url):
         button.tap()
     expect(button).to_have_attribute("aria-pressed", "false")
     page.close()
-    print("Native playback, blocked-start retry, tab visibility, repeated toggles: PASS", flush=True)
+    print("Native playback, cue-only permission, interruption recovery, tab visibility, repeated toggles: PASS", flush=True)
+
+
+def check_context_recovery(browser, url):
+    page = browser.new_page(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
+    page.add_init_script("""
+      window.contexts = []; window.nativePlayers = []; window.testHidden = false;
+      Object.defineProperty(document,'hidden',{get:()=>window.testHidden});
+      const nativePlay = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function() {
+        if (!nativePlayers.includes(this)) nativePlayers.push(this);
+        return nativePlay.call(this);
+      };
+      const Native = window.AudioContext || window.webkitAudioContext;
+      if (Native) {
+        const Observed = class extends Native {
+          constructor(...args) { super(...args); contexts.push(this); }
+        };
+        if (window.AudioContext) window.AudioContext = Observed;
+        else window.webkitAudioContext = Observed;
+      }
+    """)
+    page.goto(url)
+    button = page.locator("#sound")
+    button.tap()
+    expect(button).to_have_attribute("aria-pressed", "true")
+    if page.evaluate("contexts.some(c=>c.state==='running')"):
+        page.evaluate("contexts[0].suspend()")
+        expect(button).to_have_attribute("aria-label", "Resume sound")
+        page.locator("#chapters").tap()
+        expect(button).to_have_attribute("aria-pressed", "true")
+        page.locator("#close-chapters").tap()
+        page.evaluate("testHidden=true; document.dispatchEvent(new Event('visibilitychange'))")
+        page.wait_for_function("contexts[0].state==='suspended'")
+        page.evaluate("testHidden=false; document.dispatchEvent(new Event('visibilitychange'))")
+        expect(button).to_have_attribute("aria-pressed", "true")
+        button.tap()
+        page.wait_for_function("contexts[0].state==='suspended'")
+        assert page.evaluate("contexts.length===1")
+        print("Web Audio interruption, tab visibility, resume and mute: PASS", flush=True)
+    else:
+        assert page.evaluate("nativePlayers.some(a=>a.loop && !a.paused)")
+        print("Browser selected native playback; covered by the native recovery test.", flush=True)
+    page.close()
 
 
 if __name__ == "__main__":
@@ -154,8 +211,10 @@ if __name__ == "__main__":
         browser = pw.chromium.launch()
         for native in (False, True):
             check_audio(browser, args.url, native)
+        check_context_recovery(browser, args.url)
         check_native_recovery(browser, args.url)
         browser.close()
         browser = pw.webkit.launch()
+        check_context_recovery(browser, args.url)
         check_native_recovery(browser, args.url)
         browser.close()
